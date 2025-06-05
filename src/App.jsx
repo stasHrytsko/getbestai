@@ -12,6 +12,31 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragOver, setDragOver] = useState(null);
+    // Определяем специализацию модели на основе оценок
+  const getModelSpecialization = (model, userTaskTypes = []) => {
+    const specializations = [];
+    const coding = model.evaluations?.artificial_analysis_coding_index || 0;
+    const math = model.evaluations?.artificial_analysis_math_index || 0;
+    const general = model.evaluations?.artificial_analysis_intelligence_index || 0;
+    
+    if (coding > 80) specializations.push('coding');
+    if (math > 80) specializations.push('math');
+    if (general > 85) specializations.push('general intelligence');
+    
+    if (userTaskTypes.includes('coding') && coding > 70) {
+      return ['coding'];
+    }
+    if (userTaskTypes.includes('analysis') && math > 70) {
+      return ['math', 'analysis'];
+    }
+    if (userTaskTypes.includes('translation') || userTaskTypes.includes('generation') || userTaskTypes.includes('qa') || userTaskTypes.includes('creative')) {
+      if (general > coding && general > math) {
+        return ['language tasks', 'general intelligence'];
+      }
+    }
+    
+    return specializations.length > 0 ? specializations : ['general'];
+  };
  
   const API_KEY = 'aa_UBeRmofLZUpndgJhNQKYXwzEcbqHEGrl';
 
@@ -72,31 +97,7 @@ const App = () => {
   };
 
 
-  // Определяем специализацию модели на основе оценок
-  const getModelSpecialization = (model, userTaskTypes = []) => {
-    const specializations = [];
-    const coding = model.evaluations?.artificial_analysis_coding_index || 0;
-    const math = model.evaluations?.artificial_analysis_math_index || 0;
-    const general = model.evaluations?.artificial_analysis_intelligence_index || 0;
-    
-    if (coding > 80) specializations.push('coding');
-    if (math > 80) specializations.push('math');
-    if (general > 85) specializations.push('general intelligence');
-    
-    if (userTaskTypes.includes('coding') && coding > 70) {
-      return ['coding'];
-    }
-    if (userTaskTypes.includes('analysis') && math > 70) {
-      return ['math', 'analysis'];
-    }
-    if (userTaskTypes.includes('translation') || userTaskTypes.includes('generation') || userTaskTypes.includes('qa') || userTaskTypes.includes('creative')) {
-      if (general > coding && general > math) {
-        return ['language tasks', 'general intelligence'];
-      }
-    }
-    
-    return specializations.length > 0 ? specializations : ['general'];
-  };
+
 
   const taskTypes = [
     { id: 'translation', name: 'Перевод текстов', description: 'Перевод между языками, локализация', icon: '🌐' },
@@ -471,7 +472,8 @@ const App = () => {
                         index === 0 ? 'bg-yellow-500' : 
                         index === 1 ? 'bg-gray-400' : 'bg-amber-600'
                       }`}>
-                        🥇
+                        {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+
                       </div>
                       <div className="text-xs text-center text-gray-500 mt-1">
                         {index + 1} место
@@ -596,8 +598,9 @@ const App = () => {
               ).join(', ')}
             </p>
             <p className="text-sm text-gray-500 mb-6">
-                Обработано {recommendedModels.length} моделей.
-                {models === mockModels ? 'Используются демо-данные' : 'Данные из API'}
+              Проанализировано {models.length} моделей, показаны топ-3. 
+              Данные из <a href="https://artificialanalysis.ai/" className="text-blue-600">Artificial Analysis</a>
+              {models === mockModels ? ' (демо-режим)' : ''}
             </p>
           </div>
 
@@ -623,7 +626,6 @@ const App = () => {
                           {index === 0 && "🥇 Лучший выбор для ваших задач"}
                           {index === 1 && "🥈 Отличная альтернатива"}
                           {index === 2 && "🥉 Хороший бюджетный вариант"}
-                          {index > 2 && `⭐ Вариант №${index + 1}`}
                         </p>
                       </div>
                     </div>
