@@ -228,7 +228,7 @@ const App = () => {
     );
 
 
-    return Math.round(score);
+    return Math.min(100,Math.round(score));
   };
 
 
