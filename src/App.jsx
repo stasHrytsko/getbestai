@@ -6,50 +6,68 @@ const App = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     taskTypes: [],
-    qualityPriority: 5,
-    volumePriority: 3,
-    speedPriority: 3,
-    budgetPriority: 3,
-    languages: []
+    qualityPriority: 1,
+    volumePriority: 1,
+    speedPriority: 1,
+    budgetPriority: 1,
+    languages: [],
+    inputLanguage: 'ru',
+    outputLanguage: 'ru'
   });
+  const [models, setModels] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  // ⭐ ВСТАВЬТЕ СЮДА ВАШ API КЛЮЧ ⭐
+  const API_KEY = aa_UBeRmofLZUpndgJhNQKYXwzEcbqHEGrl;
+
+  // ⭐ API ФУНКЦИЯ - ЗАПРОС К ARTIFICIAL ANALYSIS ⭐
+  const fetchModelsFromAPI = async () => {
+    if (!API_KEY || API_KEY === aa_UBeRmofLZUpndgJhNQKYXwzEcbqHEGrl) {
+      setModels(mockModels);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('https://artificialanalysis.ai/api/models', {
+        headers: {
+          'x-api-key': API_KEY, // ⭐ ЗДЕСЬ ИСПОЛЬЗУЕТСЯ API КЛЮЧ ⭐
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const formattedModels = data.models?.map(model => ({
+          id: model.model_id || model.id,
+          name: model.model_name || model.name,
+          creator: model.creator || 'Unknown',
+          quality_score: model.quality_score || 80,
+          speed_score: model.speed_score || 80,
+          price_per_1k_tokens: model.price_input_1k || 0.001,
+          context_length: model.context_length || 4000,
+          description: model.description || 'AI модель',
+          best_for: model.use_cases || ['general']
+        })) || [];
+        
+        setModels(formattedModels.length > 0 ? formattedModels : mockModels);
+      } else {
+        setModels(mockModels);
+      }
+    } catch (error) {
+      setModels(mockModels);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const taskTypes = [
-    { 
-      id: 'translation', 
-      name: 'Перевод текстов', 
-      description: 'Перевод между языками, локализация',
-      icon: '🌐'
-    },
-    { 
-      id: 'generation', 
-      name: 'Генерация текста', 
-      description: 'Создание статей, постов, контента',
-      icon: '✍️'
-    },
-    { 
-      id: 'qa', 
-      name: 'Ответы на вопросы', 
-      description: 'Поиск информации и объяснения',
-      icon: '❓'
-    },
-    { 
-      id: 'coding', 
-      name: 'Написание кода', 
-      description: 'Программирование и отладка',
-      icon: '💻'
-    },
-    { 
-      id: 'creative', 
-      name: 'Креативные задачи', 
-      description: 'Истории, поэзия, сценарии',
-      icon: '🎨'
-    },
-    { 
-      id: 'analysis', 
-      name: 'Анализ данных', 
-      description: 'Обработка и интерпретация информации',
-      icon: '📊'
-    }
+    { id: 'translation', name: 'Перевод текстов', description: 'Перевод между языками, локализация', icon: '🌐' },
+    { id: 'generation', name: 'Генерация текста', description: 'Создание статей, постов, контента', icon: '✍️' },
+    { id: 'qa', name: 'Ответы на вопросы', description: 'Поиск информации и объяснения', icon: '❓' },
+    { id: 'coding', name: 'Написание кода', description: 'Программирование и отладка', icon: '💻' },
+    { id: 'creative', name: 'Креативные задачи', description: 'Истории, поэзия, сценарии', icon: '🎨' },
+    { id: 'analysis', name: 'Анализ данных', description: 'Обработка и интерпретация информации', icon: '📊' }
   ];
 
   const languages = [
@@ -97,6 +115,63 @@ const App = () => {
     }
   ];
 
+  const getPriorityComment = (value, type) => {
+    const comments = {
+      quality: ['базовое', 'простое', 'хорошее', 'отличное', 'максимальное'],
+      speed: ['медленно', 'терпимо', 'быстро', 'очень быстро', 'мгновенно'],
+      budget: ['дорого', 'средне', 'экономно', 'дешево', 'бесплатно'],
+      volume: ['мало', 'немного', 'средне', 'много', 'огромно']
+    };
+    const index = Math.min(Math.floor(value / 2), 4);
+    return comments[type][index];
+  };
+
+  const getQualityComment = (score) => {
+    if (score >= 90) return 'превосходное качество';
+    if (score >= 80) return 'высокое качество';
+    if (score >= 70) return 'хорошее качество';
+    return 'базовое качество';
+  };
+
+  const getSpeedComment = (score) => {
+    if (score >= 90) return 'очень быстро';
+    if (score >= 80) return 'быстро';
+    if (score >= 70) return 'средняя скорость';
+    return 'медленно';
+  };
+
+  const getPriceComment = (price) => {
+    if (price <= 0.001) return 'очень дешево';
+    if (price <= 0.01) return 'недорого';
+    if (price <= 0.02) return 'средняя цена';
+    return 'дорого';
+  };
+
+  const getContextComment = (context) => {
+    if (context >= 100000) return 'огромный контекст';
+    if (context >= 50000) return 'большой контекст';
+    if (context >= 10000) return 'средний контекст';
+    return 'малый контекст';
+  };
+
+  const calculatePricePerWord = (pricePerToken, inputLang, outputLang) => {
+    // Примерное соотношение токенов к словам для разных языков
+    const tokenRatios = {
+      'en': 0.75, // английский самый эффективный
+      'ru': 2.5,  // русский менее эффективный
+      'de': 1.2,  // немецкий
+      'fr': 1.1,  // французский
+      'es': 1.0,  // испанский
+      'zh': 1.8   // китайский
+    };
+    
+    const inputRatio = tokenRatios[inputLang] || 1;
+    const outputRatio = tokenRatios[outputLang] || 1;
+    const avgRatio = (inputRatio + outputRatio) / 2;
+    
+    return (pricePerToken * avgRatio).toFixed(6);
+  };
+
   const handleTaskTypeToggle = (taskId) => {
     setFormData(prev => ({
       ...prev,
@@ -139,7 +214,7 @@ const App = () => {
   };
 
   const getRecommendedModels = () => {
-    return mockModels
+    return models
       .map(model => ({
         ...model,
         score: calculateModelScore(model)
@@ -156,29 +231,32 @@ const App = () => {
     }
   };
 
+  const handleNextStep = async () => {
+    await fetchModelsFromAPI(); // ⭐ ЗДЕСЬ ВЫЗЫВАЕТСЯ API ⭐
+    setStep(2);
+  };
+
   if (step === 1) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          {/* Логотип и описание */}
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-bold text-blue-600 mb-4">
               GetBestAI
             </h1>
-            <p className="text-gray-600">
-              Подберем оптимальную AI модель для ваших задач
+            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+              Умный подбор AI моделей под ваши задачи. Сравниваем качество, скорость и стоимость, 
+              чтобы найти идеальное решение. Экономьте время и деньги на правильном выборе.
             </p>
           </div>
 
           {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
-                1
-              </div>
+              <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">1</div>
               <div className="w-12 h-1 mx-2 bg-gray-200" />
-              <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-sm font-medium">
-                2
-              </div>
+              <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-sm font-medium">2</div>
             </div>
             <div className="text-center text-sm text-gray-600">
               Шаг 1 из 2: Настройка параметров
@@ -219,16 +297,19 @@ const App = () => {
             
             <div className="space-y-6">
               {[
-                { key: 'qualityPriority', label: 'Качество результата', icon: '⭐' },
-                { key: 'speedPriority', label: 'Скорость работы', icon: '⚡' },
-                { key: 'budgetPriority', label: 'Экономичность', icon: '💰' },
-                { key: 'volumePriority', label: 'Работа с большими объемами', icon: '📊' }
-              ].map(({ key, label, icon }) => (
+                { key: 'qualityPriority', label: 'Качество результата', icon: '⭐', type: 'quality' },
+                { key: 'speedPriority', label: 'Скорость работы', icon: '⚡', type: 'speed' },
+                { key: 'budgetPriority', label: 'Экономичность', icon: '💰', type: 'budget' },
+                { key: 'volumePriority', label: 'Работа с большими объемами', icon: '📊', type: 'volume' }
+              ].map(({ key, label, icon, type }) => (
                 <div key={key} className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-lg">{icon}</span>
                     <label className="text-sm font-medium text-gray-700">{label}</label>
                     <span className="text-sm text-gray-500">({formData[key]}/10)</span>
+                    <span className="text-sm text-blue-600 ml-auto">
+                      {getPriorityComment(formData[key], type)}
+                    </span>
                   </div>
                   <input
                     type="range"
@@ -252,30 +333,48 @@ const App = () => {
 
           {/* Languages */}
           <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">
-              Языки работы
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {languages.map(lang => (
-                <button
-                  key={lang.id}
-                  onClick={() => handleLanguageToggle(lang.id)}
-                  className={`px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${
-                    formData.languages.includes(lang.id)
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <span>{lang.flag}</span>
-                  <span>{lang.name}</span>
-                </button>
-              ))}
+            <h3 className="text-lg font-medium text-gray-800 mb-4">Языки работы</h3>
+            
+            {/* Input Language */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Язык ввода данных
+              </label>
+              <select
+                value={formData.inputLanguage}
+                onChange={(e) => setFormData(prev => ({ ...prev, inputLanguage: e.target.value }))}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                {languages.map(lang => (
+                  <option key={lang.id} value={lang.id}>
+                    {lang.flag} {lang.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Output Language */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Язык вывода результата
+              </label>
+              <select
+                value={formData.outputLanguage}
+                onChange={(e) => setFormData(prev => ({ ...prev, outputLanguage: e.target.value }))}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                {languages.map(lang => (
+                  <option key={lang.id} value={lang.id}>
+                    {lang.flag} {lang.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
           {/* Next Button */}
           <button
-            onClick={() => setStep(2)}
+            onClick={handleNextStep}
             disabled={formData.taskTypes.length === 0}
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
@@ -310,13 +409,9 @@ const App = () => {
             {/* Progress Bar */}
             <div className="mb-6">
               <div className="flex items-center justify-center mb-4">
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
-                  1
-                </div>
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">1</div>
                 <div className="w-12 h-1 mx-2 bg-blue-600" />
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
-                  2
-                </div>
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">2</div>
               </div>
               <div className="text-center text-sm text-gray-600">
                 Шаг 2 из 2: Результаты подбора
@@ -331,74 +426,84 @@ const App = () => {
             </p>
           </div>
 
-          <div className="space-y-6">
-            {recommendedModels.map((model, index) => (
-              <div key={model.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{getMedalEmoji(index + 1)}</span>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-xl font-bold text-gray-800">
-                          {model.name}
-                        </h3>
-                        <span className="text-gray-500">by {model.creator}</span>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-2">Анализируем модели...</span>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {recommendedModels.map((model, index) => (
+                <div key={model.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{getMedalEmoji(index + 1)}</span>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-xl font-bold text-gray-800">{model.name}</h3>
+                          <span className="text-gray-500">by {model.creator}</span>
+                        </div>
+                        <p className="text-blue-600 text-sm mb-1">
+                          {index === 0 && "🥇 Лучший выбор для ваших задач"}
+                          {index === 1 && "🥈 Отличная альтернатива"}
+                          {index === 2 && "🥉 Хороший бюджетный вариант"}
+                        </p>
                       </div>
-                      <p className="text-blue-600 text-sm mb-1">
-                        {index === 0 && "🥇 Лучший выбор для ваших задач"}
-                        {index === 1 && "🥈 Отличная альтернатива"}
-                        {index === 2 && "🥉 Хороший бюджетный вариант"}
-                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-blue-600">{model.score}/100</div>
+                      <div className="text-sm text-gray-500">совпадение</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {model.score}/100
-                    </div>
-                    <div className="text-sm text-gray-500">совпадение</div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div className="text-center p-3 bg-gray-50 rounded">
-                    <div className="text-lg font-semibold text-gray-800">
-                      {model.quality_score}/100
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="text-center p-3 bg-gray-50 rounded">
+                      <div className="text-lg font-semibold text-gray-800">{model.quality_score}/100</div>
+                      <div className="text-sm text-gray-500">Качество</div>
+                      <div className="text-xs text-blue-600">{getQualityComment(model.quality_score)}</div>
                     </div>
-                    <div className="text-sm text-gray-500">Качество</div>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded">
-                    <div className="text-lg font-semibold text-gray-800">
-                      {model.speed_score}/100
+                    <div className="text-center p-3 bg-gray-50 rounded">
+                      <div className="text-lg font-semibold text-gray-800">{model.speed_score}/100</div>
+                      <div className="text-sm text-gray-500">Скорость</div>
+                      <div className="text-xs text-blue-600">{getSpeedComment(model.speed_score)}</div>
                     </div>
-                    <div className="text-sm text-gray-500">Скорость</div>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded">
-                    <div className="text-lg font-semibold text-gray-800">
-                      ${model.price_per_1k_tokens}
+                    <div className="text-center p-3 bg-gray-50 rounded">
+                      <div className="text-lg font-semibold text-gray-800">${model.price_per_1k_tokens}</div>
+                      <div className="text-sm text-gray-500">за 1K токенов</div>
+                      <div className="text-xs text-blue-600">{getPriceComment(model.price_per_1k_tokens)}</div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        ${calculatePricePerWord(model.price_per_1k_tokens, formData.inputLanguage, formData.outputLanguage)} за слово
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">за 1K токенов</div>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded">
-                    <div className="text-lg font-semibold text-gray-800">
-                      {(model.context_length / 1000).toFixed(0)}K
+                    <div className="text-center p-3 bg-gray-50 rounded">
+                      <div className="text-lg font-semibold text-gray-800">{(model.context_length / 1000).toFixed(0)}K</div>
+                      <div className="text-sm text-gray-500">Контекст</div>
+                      <div className="text-xs text-blue-600">{getContextComment(model.context_length)}</div>
                     </div>
-                    <div className="text-sm text-gray-500">Контекст</div>
                   </div>
-                </div>
 
-                <div className="mb-4">
-                  <p className="text-gray-700 mb-2">{model.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {model.best_for?.map(feature => (
-                      <span key={feature} className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
-                        {feature}
-                      </span>
-                    ))}
+                  <div className="mb-4">
+                    <p className="text-gray-700 mb-2">{model.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {model.best_for?.map(feature => (
+                        <span key={feature} className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                    <a 
+                      href="https://artificialanalysis.ai/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 text-sm"
+                    >
+                      Подробные данные на Artificial Analysis →
+                    </a>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
