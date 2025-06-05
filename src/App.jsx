@@ -4,7 +4,7 @@ const App = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     taskTypes: [],
-    priorityOrder: ['quality', 'speed', 'budget', 'volume'], // Новый порядок приоритетов
+    priorityOrder: ['quality', 'speed', 'budget'], // Убрали volume
     inputLanguage: 'ru',
     outputLanguage: 'ru'
   });
@@ -12,13 +12,13 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
  
-  // ⭐ ВСТАВЬТЕ СЮДА ВАШ API КЛЮЧ ⭐
   const API_KEY = 'aa_UBeRmofLZUpndgJhNQKYXwzEcbqHEGrl';
 
-  // ⭐ ОБНОВЛЕННАЯ API ФУНКЦИЯ ⭐
+  // ⭐ ИСПРАВЛЕННАЯ API ФУНКЦИЯ ⭐
   const fetchModelsFromAPI = async () => {
     if (!API_KEY) {
-
+      setModels(mockModels);
+      return;
     }
 
     setLoading(true);
@@ -32,18 +32,24 @@ const App = () => {
      
       if (response.ok) {
         const data = await response.json();
-        const formattedModels = data.data?.map(model => ({
-          id: model.id,
-          name: model.name,
-          creator: model.model_creator?.name || 'Unknown',
-          quality_score: Math.round(model.evaluations?.artificial_analysis_intelligence_index || 50),
-          speed_score: Math.min(100, Math.round((model.median_output_tokens_per_second || 50) / 2)),
-          price_per_1k_tokens: (model.pricing?.price_1m_blended_3_to_1 || 1000) / 1000,
-          context_length: 32000, // Placeholder, нет в API
-          description: `AI модель от ${model.model_creator?.name || 'Unknown'}`,
-          best_for: ['general']
-        })) || [];
-       
+        const formattedModels = data.data?.map(model => {
+          // Правильный расчет цены
+          const inputPrice = model.pricing?.price_1m_input_tokens || 0;
+          const outputPrice = model.pricing?.price_1m_output_tokens || 0;
+          const blendedPrice = (inputPrice * 3 + outputPrice * 1) / 4 / 1000;
+          
+          return {
+            id: model.id,
+            name: model.name,
+            creator: model.model_creator?.name || 'Unknown',
+            quality_score: Math.round(model.evaluations?.artificial_analysis_intelligence_index || 50),
+            speed_score: Math.min(100, Math.round((model.median_output_tokens_per_second || 50) / 2)),
+            price_per_1k_tokens: blendedPrice,
+            description: `AI модель от ${model.model_creator?.name || 'Unknown'}`,
+            best_for: ['general']
+          };
+        }) || [];
+        
         setModels(formattedModels.length > 0 ? formattedModels : mockModels);
       } else {
         setModels(mockModels);
@@ -73,6 +79,7 @@ const App = () => {
     { id: 'zh', name: '中文', flag: '🇨🇳' }
   ];
 
+  // Убрали volume из приоритетов
   const priorityItems = [
     { 
       key: 'quality', 
@@ -82,8 +89,7 @@ const App = () => {
       positionComment: {
         1: 'Главный критерий - готов доплатить за лучшее качество',
         2: 'Важно, но могу пожертвовать ради других факторов', 
-        3: 'Средняя важность - хорошее качество достаточно',
-        4: 'Неважно - базовое качество устраивает'
+        3: 'Средняя важность - хорошее качество достаточно'
       }
     },
     { 
@@ -94,8 +100,7 @@ const App = () => {
       positionComment: {
         1: 'Критично - каждая секунда на счету',
         2: 'Важно - желательно быстро',
-        3: 'Терпимо - могу подождать',
-        4: 'Неважно - скорость не критична'
+        3: 'Терпимо - могу подождать'
       }
     },
     { 
@@ -106,20 +111,7 @@ const App = () => {
       positionComment: {
         1: 'Главное - бюджет ограничен',
         2: 'Важно - ищу баланс цена/качество',
-        3: 'Средне - готов доплатить за лучшее',
-        4: 'Неважно - цена не проблема'
-      }
-    },
-    { 
-      key: 'volume', 
-      label: 'Большие объемы', 
-      icon: '📊', 
-      description: 'Способность обрабатывать длинные тексты',
-      positionComment: {
-        1: 'Критично - работаю с большими документами',
-        2: 'Важно - иногда нужен большой контекст',
-        3: 'Средне - обычно короткие тексты',
-        4: 'Неважно - только короткие запросы'
+        3: 'Средне - готов доплатить за лучшее'
       }
     }
   ];
@@ -129,10 +121,9 @@ const App = () => {
       id: 'gpt-4-turbo',
       name: 'GPT-4 Turbo',
       creator: 'OpenAI',
-      quality_score: 100,
-      speed_score: 100,
-      price_per_1k_tokens: 0.01,
-      context_length: 1000,
+      quality_score: 95,
+      speed_score: 75,
+      price_per_1k_tokens: 0.03,
       description: 'Самая мощная модель для сложных задач',
       best_for: ['complex reasoning', 'creative writing']
     },
@@ -140,10 +131,9 @@ const App = () => {
       id: 'claude-3-sonnet',
       name: 'Claude 3 Sonnet',
       creator: 'Anthropic',
-      quality_score: 100,
-      speed_score: 100,
-      price_per_1k_tokens: 0.01,
-      context_length: 100,
+      quality_score: 88,
+      speed_score: 85,
+      price_per_1k_tokens: 0.015,
       description: 'Сбалансированная модель для большинства задач',
       best_for: ['analysis', 'writing']
     },
@@ -151,10 +141,9 @@ const App = () => {
       id: 'gemini-pro',
       name: 'Gemini Pro',
       creator: 'Google',
-      quality_score: 100,
-      speed_score: 100,
-      price_per_1k_tokens: 0.0001,
-      context_length: 1000,
+      quality_score: 82,
+      speed_score: 90,
+      price_per_1k_tokens: 0.0005,
       description: 'Быстрая и экономичная модель',
       best_for: ['fast responses', 'cost-effective']
     }
@@ -181,13 +170,6 @@ const App = () => {
     return 'дорого';
   };
 
-  const getContextComment = (context) => {
-    if (context >= 100000) return 'огромный контекст';
-    if (context >= 50000) return 'большой контекст';
-    if (context >= 10000) return 'средний контекст';
-    return 'малый контекст';
-  };
-
   const getScoreComment = (score) => {
     if (score >= 90) return 'Идеальное совпадение с вашими критериями';
     if (score >= 80) return 'Отлично подходит для ваших задач';
@@ -199,7 +181,7 @@ const App = () => {
 
   const calculatePricePerWord = (pricePerToken, inputLang, outputLang) => {
     const tokenRatios = {
-      'en': 0.75, 'ru': 2.5, 'de': 1.2, 'fr': 1.1, 'es': 1.0, 'zh': 1.8
+      'en': 0.75, 'ru': 0.5, 'de': 1.2, 'fr': 1.1, 'es': 1.0, 'zh': 1.8
     };
     const inputRatio = tokenRatios[inputLang] || 1;
     const outputRatio = tokenRatios[outputLang] || 1;
@@ -235,9 +217,7 @@ const App = () => {
     const newOrder = [...formData.priorityOrder];
     const draggedPriority = newOrder[draggedItem];
     
-    // Удаляем элемент из старой позиции
     newOrder.splice(draggedItem, 1);
-    // Вставляем в новую позицию
     newOrder.splice(dropIndex, 0, draggedPriority);
     
     setFormData(prev => ({
@@ -248,25 +228,22 @@ const App = () => {
     setDraggedItem(null);
   };
 
+  // Исправленный алгоритм - только 3 критерия
   const calculateModelScore = (model) => {
-    // Веса основанные на позиции (1 место = 40%, 2 = 30%, 3 = 20%, 4 = 10%)
     const weights = {
-      [formData.priorityOrder[0]]: 0.4,
-      [formData.priorityOrder[1]]: 0.3,
-      [formData.priorityOrder[2]]: 0.2,
-      [formData.priorityOrder[3]]: 0.1
+      [formData.priorityOrder[0]]: 0.5,  // 50%
+      [formData.priorityOrder[1]]: 0.3,  // 30%
+      [formData.priorityOrder[2]]: 0.2   // 20%
     };
 
     const qualityNorm = model.quality_score;
     const speedNorm = model.speed_score;
     const priceNorm = Math.max(0, 100 - (model.price_per_1k_tokens * 1000));
-    const contextNorm = Math.min(100, (model.context_length / 1000) * 2);
 
     const score = (
       qualityNorm * (weights.quality || 0) +
       speedNorm * (weights.speed || 0) +
-      priceNorm * (weights.budget || 0) +
-      contextNorm * (weights.volume || 0)
+      priceNorm * (weights.budget || 0)
     );
 
     return Math.min(100, Math.round(score));
@@ -281,12 +258,21 @@ const App = () => {
       .sort((a, b) => b.score - a.score);
   };
 
-  const getMedalEmoji = (place) => {
+  const getMedalIcon = (place) => {
     switch (place) {
       case 1: return '🥇';
       case 2: return '🥈';
       case 3: return '🥉';
-      default: return '⭐';
+      default: return `${place}`;
+    }
+  };
+
+  const getMedalBg = (place) => {
+    switch (place) {
+      case 1: return 'bg-yellow-500';
+      case 2: return 'bg-gray-400';
+      case 3: return 'bg-amber-600';
+      default: return 'bg-gray-300';
     }
   };
 
@@ -375,8 +361,7 @@ const App = () => {
                     <span className="text-gray-400 mr-3 text-xl">⋮⋮</span>
                     <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-4 text-white ${
                       index === 0 ? 'bg-yellow-500' : 
-                      index === 1 ? 'bg-gray-400' : 
-                      index === 2 ? 'bg-amber-600' : 'bg-gray-300'
+                      index === 1 ? 'bg-gray-400' : 'bg-amber-600'
                     }`}>
                       {index + 1}
                     </span>
@@ -463,7 +448,7 @@ const App = () => {
 
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-6xl mx-auto p-6">
           <div className="mb-8">
             <button
               onClick={() => setStep(1)}
@@ -487,90 +472,96 @@ const App = () => {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
               Рекомендации для вас
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-4">
               Ранжировано по вашим приоритетам: {formData.priorityOrder.map((p, i) => 
                 `${i + 1}. ${priorityItems.find(item => item.key === p)?.label}`
               ).join(', ')}
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              Найдено {recommendedModels.length} моделей. Показаны все результаты от лучшего к худшему.
             </p>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2">Анализируем модели...</span>
+              <span className="ml-2">Анализируем все доступные модели...</span>
             </div>
           ) : (
-            <div className="space-y-6">
-              {recommendedModels.slice(0, 3).map((model, index) => (
-                <div key={model.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{getMedalEmoji(index + 1)}</span>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-xl font-bold text-gray-800">{model.name}</h3>
-                          <span className="text-gray-500">by {model.creator}</span>
-                        </div>
-                        <p className="text-blue-600 text-sm mb-1">
-                          {index === 0 && "🥇 Лучший выбор для ваших задач"}
-                          {index === 1 && "🥈 Отличная альтернатива"}
-                          {index === 2 && "🥉 Хороший бюджетный вариант"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-blue-600">{model.score}/100</div>
-                      <div className="text-sm text-gray-500">совпадение</div>
-                      <div className="text-xs text-gray-400 mt-1 max-w-32">
-                        {getScoreComment(model.score)}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {recommendedModels.map((model, index) => (
+                <div key={model.id} className={`bg-white rounded-lg shadow-lg p-4 border-l-4 ${
+                  index === 0 ? 'border-yellow-500' :
+                  index === 1 ? 'border-gray-400' :
+                  index === 2 ? 'border-amber-600' : 'border-blue-300'
+                }`}>
+                  {/* Header с рейтингом */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${getMedalBg(index + 1)}`}>
+                        {getMedalIcon(index + 1)}
+                      </span>
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-blue-600">{model.score}/100</div>
+                        <div className="text-xs text-gray-500">совпадение</div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div className="text-center p-3 bg-gray-50 rounded">
+                  {/* Название модели */}
+                  <div className="mb-3">
+                    <h3 className="text-lg font-bold text-gray-800">{model.name}</h3>
+                    <p className="text-sm text-gray-500">by {model.creator}</p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      {getScoreComment(model.score)}
+                    </p>
+                  </div>
+
+                  {/* Метрики */}
+                  <div className="grid grid-cols-1 gap-3 mb-4">
+                    <div className="text-center p-2 bg-gray-50 rounded">
                       <div className="text-lg font-semibold text-gray-800">{model.quality_score}/100</div>
-                      <div className="text-sm text-gray-500">Качество</div>
+                      <div className="text-xs text-gray-500">Качество</div>
                       <div className="text-xs text-blue-600">{getQualityComment(model.quality_score)}</div>
                     </div>
-                    <div className="text-center p-3 bg-gray-50 rounded">
+                    <div className="text-center p-2 bg-gray-50 rounded">
                       <div className="text-lg font-semibold text-gray-800">{model.speed_score}/100</div>
-                      <div className="text-sm text-gray-500">Скорость</div>
+                      <div className="text-xs text-gray-500">Скорость</div>
                       <div className="text-xs text-blue-600">{getSpeedComment(model.speed_score)}</div>
                     </div>
-                    <div className="text-center p-3 bg-gray-50 rounded">
+                    <div className="text-center p-2 bg-gray-50 rounded">
                       <div className="text-lg font-semibold text-gray-800">${model.price_per_1k_tokens.toFixed(3)}</div>
-                      <div className="text-sm text-gray-500">за 1K токенов</div>
+                      <div className="text-xs text-gray-500">за 1K токенов</div>
                       <div className="text-xs text-blue-600">{getPriceComment(model.price_per_1k_tokens)}</div>
                       <div className="text-xs text-gray-400 mt-1">
                         ${calculatePricePerWord(model.price_per_1k_tokens, formData.inputLanguage, formData.outputLanguage)} за слово
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-gray-50 rounded">
-                      <div className="text-lg font-semibold text-gray-800">{(model.context_length / 1000).toFixed(0)}K</div>
-                      <div className="text-sm text-gray-500">Контекст</div>
-                      <div className="text-xs text-blue-600">{getContextComment(model.context_length)}</div>
-                    </div>
                   </div>
 
-                  <div className="mb-4">
-                    <p className="text-gray-700 mb-2">{model.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {model.best_for?.map(feature => (
-                        <span key={feature} className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
-                          {feature}
-                        </span>
-                      ))}
-                    </div>
-                    <a
-                      href="https://artificialanalysis.ai/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-700 text-sm"
-                    >
-                      Подробные данные на Artificial Analysis →
-                    </a>
+                  {/* Описание */}
+                  <div className="text-xs text-gray-600 mb-3">
+                    {model.description}
                   </div>
+
+                  {/* Теги */}
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {model.best_for?.map(feature => (
+                      <span key={feature} className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Ссылка */}
+                  <a
+                    href="https://artificialanalysis.ai/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 text-xs block"
+                  >
+                    Подробнее на Artificial Analysis →
+                  </a>
                 </div>
               ))}
             </div>
