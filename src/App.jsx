@@ -17,54 +17,60 @@ const App = () => {
 
   // ⭐ API ФУНКЦИЯ С ДОПОЛНИТЕЛЬНЫМИ ДАННЫМИ ⭐
   const fetchModelsFromAPI = async () => {
-    if (!API_KEY) {
-      setModels(mockModels);
-      console.log(`Получено ${formattedModels.length} моделей из API`);
-      return;
-    }
-
+    console.log('📡 Запрос к нашему API endpoint...');
+    
     setLoading(true);
     try {
-      const response = await fetch('https://artificialanalysis.ai/api/v2/data/llms/models', {
-        headers: {
-          'x-api-key': API_KEY,
-          'Content-Type': 'application/json'
-        }
-      });
-     
+      // Теперь запрос идет к НАШЕМУ серверу
+      const response = await fetch('/api/models');
+      
+      console.log('📊 Response status:', response.status);
+      
       if (response.ok) {
-        const data = await response.json();
-        const formattedModels = data.data?.map(model => {
-          const inputPrice = model.pricing?.price_1m_input_tokens || 0;
-          const outputPrice = model.pricing?.price_1m_output_tokens || 0;
-          const blendedPrice = (inputPrice * 3 + outputPrice * 1) / 4 / 1000;
-          
-          return {
-            id: model.id,
-            name: model.name,
-            creator: model.model_creator?.name || 'Unknown',
-            quality_score: Math.round(model.evaluations?.artificial_analysis_intelligence_index || 50),
-            speed_score: Math.min(100, Math.round((model.median_output_tokens_per_second || 50) / 2)),
-            coding_score: Math.round(model.evaluations?.artificial_analysis_coding_index || 50),
-            math_score: Math.round(model.evaluations?.artificial_analysis_math_index || 50),
-            price_per_1k_tokens: blendedPrice,
-            release_date: model.release_date || null,
-            time_to_first_token: model.median_time_to_first_token_seconds || null,
-            description: `AI модель от ${model.model_creator?.name || 'Unknown'}`,
-            best_for: getModelSpecialization(model)
-          };
-        }) || [];
+        const result = await response.json();
+        console.log('✅ Получен ответ:', result);
         
-        setModels(formattedModels.length > 0 ? formattedModels : mockModels);
+        if (result.success && result.data?.data) {
+          const formattedModels = result.data.data.map(model => {
+            const inputPrice = model.pricing?.price_1m_input_tokens || 0;
+            const outputPrice = model.pricing?.price_1m_output_tokens || 0;
+            const blendedPrice = (inputPrice * 3 + outputPrice * 1) / 4 / 1000;
+            
+            return {
+              id: model.id,
+              name: model.name,
+              creator: model.model_creator?.name || 'Unknown',
+              quality_score: Math.round(model.evaluations?.artificial_analysis_intelligence_index || 50),
+              speed_score: Math.min(100, Math.round((model.median_output_tokens_per_second || 50) / 2)),
+              coding_score: Math.round(model.evaluations?.artificial_analysis_coding_index || 50),
+              math_score: Math.round(model.evaluations?.artificial_analysis_math_index || 50),
+              price_per_1k_tokens: blendedPrice,
+              release_date: model.release_date || null,
+              time_to_first_token: model.median_time_to_first_token_seconds || null,
+              description: `AI модель от ${model.model_creator?.name || 'Unknown'}`,
+              best_for: getModelSpecialization(model)
+            };
+          });
+          
+          console.log('✅ Обработано моделей:', formattedModels.length);
+          setModels(formattedModels);
+        } else {
+          console.log('❌ Нет данных в ответе, используем mock');
+          setModels(mockModels);
+        }
       } else {
+        const error = await response.json();
+        console.error('❌ API Error:', error);
         setModels(mockModels);
       }
     } catch (error) {
+      console.error('❌ Network Error:', error);
       setModels(mockModels);
     } finally {
       setLoading(false);
     }
   };
+
 
   // Определяем специализацию модели на основе оценок
   const getModelSpecialization = (model) => {
