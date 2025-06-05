@@ -48,7 +48,7 @@ const App = () => {
               release_date: model.release_date || null,
               time_to_first_token: model.median_time_to_first_token_seconds || null,
               description: `AI модель от ${model.model_creator?.name || 'Unknown'}`,
-              best_for: getModelSpecialization(model)
+              best_for: getModelSpecialization(model, formData.taskTypes)
             };
           });
           
@@ -73,15 +73,27 @@ const App = () => {
 
 
   // Определяем специализацию модели на основе оценок
-  const getModelSpecialization = (model) => {
+  const getModelSpecialization = (model, userTaskTypes = []) => {
     const specializations = [];
     const coding = model.evaluations?.artificial_analysis_coding_index || 0;
     const math = model.evaluations?.artificial_analysis_math_index || 0;
     const general = model.evaluations?.artificial_analysis_intelligence_index || 0;
     
-    if (coding > 70) specializations.push('coding');
-    if (math > 70) specializations.push('math');
-    if (general > 80) specializations.push('general intelligence');
+    if (coding > 80) specializations.push('coding');
+    if (math > 80) specializations.push('math');
+    if (general > 85) specializations.push('general intelligence');
+    
+    if (userTaskTypes.includes('coding') && coding > 70) {
+      return ['coding'];
+    }
+    if (userTaskTypes.includes('analysis') && math > 70) {
+      return ['math', 'analysis'];
+    }
+    if (userTaskTypes.includes('translation') || userTaskTypes.includes('generation') || userTaskTypes.includes('qa') || userTaskTypes.includes('creative')) {
+      if (general > coding && general > math) {
+        return ['language tasks', 'general intelligence'];
+      }
+    }
     
     return specializations.length > 0 ? specializations : ['general'];
   };
@@ -229,8 +241,8 @@ const App = () => {
     if (taskTypes.includes('coding')) {
       return model.coding_score || model.quality_score;
     }
-    if (taskTypes.includes('analysis') && model.math_score) {
-      return model.math_score;
+    if (taskTypes.includes('analysis')) {
+      return model.math_score || model.quality_score;
     }
     return model.quality_score;
   };
@@ -596,7 +608,7 @@ const App = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {recommendedModels.slice(0.3).map((model, index) => (
+              {recommendedModels.slice(0, 3).map((model, index) => (
                 <div key={model.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
