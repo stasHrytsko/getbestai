@@ -19,6 +19,7 @@ const App = () => {
   const fetchModelsFromAPI = async () => {
     if (!API_KEY) {
       setModels(mockModels);
+      console.log(`Получено ${formattedModels.length} моделей из API`);
       return;
     }
 
@@ -577,7 +578,8 @@ const App = () => {
               ).join(', ')}
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              Найдено {recommendedModels.length} моделей. Показаны все результаты от лучшего к худшему.
+                Найдено {recommendedModels.length} моделей.
+                {models === mockModels ? 'Используются демо-данные' : 'Данные из API'}
             </p>
           </div>
 
