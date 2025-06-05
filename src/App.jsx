@@ -584,7 +584,7 @@ const App = () => {
               ).join(', ')}
             </p>
             <p className="text-sm text-gray-500 mb-6">
-                Найдено {recommendedModels.length} моделей.
+                Обработано {recommendedModels.length} моделей.
                 {models === mockModels ? 'Используются демо-данные' : 'Данные из API'}
             </p>
           </div>
@@ -596,7 +596,7 @@ const App = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {recommendedModels.map((model, index) => (
+              {recommendedModels.slice(0.3).map((model, index) => (
                 <div key={model.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
