@@ -73,7 +73,6 @@ const App = () => {
               release_date: model.release_date || null,
               time_to_first_token: model.median_time_to_first_token_seconds || null,
               description: `AI модель от ${model.model_creator?.name || 'Unknown'}`,
-              best_for: getModelSpecialization(model, formData.taskTypes)
             };
           });
           
@@ -356,6 +355,7 @@ const App = () => {
     return models
       .map(model => ({
         ...model,
+        best_for: getModelSpecialization(model, formData.taskTypes), // Добавить эту строку
         score: calculateModelScore(model)
       }))
       .sort((a, b) => b.score - a.score);
