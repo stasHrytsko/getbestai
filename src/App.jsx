@@ -107,7 +107,7 @@ const App = () => {
 
   const languages = [
     { id: 'en', name: 'English', flag: '🇺🇸' },
-    { id: 'ua', name: 'Українська', flag: 'ua' },
+    { id: 'ua', name: 'Українська', flag: '🇺🇦' },
     { id: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { id: 'fr', name: 'Français', flag: '🇫🇷' },
     { id: 'es', name: 'Español', flag: '🇪🇸' },
