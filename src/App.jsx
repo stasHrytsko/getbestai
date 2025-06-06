@@ -5,15 +5,16 @@ const App = () => {
   const [formData, setFormData] = useState({
     taskTypes: [],
     priorityOrder: ['quality', 'speed', 'budget'],
-    priorityImportance: { quality: 7, speed: 6, budget: 5 }, // ДОБАВИТЬ ЭТУ СТРОКУ
-    inputLanguage: 'ru',
-    outputLanguage: 'ru'
+    priorityImportance: { quality: 7, speed: 6, budget: 5 },
+    inputLanguage: 'en',
+    outputLanguage: 'en'
   });
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragOver, setDragOver] = useState(null);
-    // Определяем специализацию модели на основе оценок
+
+  // Model specialization based on evaluations
   const getModelSpecialization = (model, userTaskTypes = []) => {
     const specializations = [];
     const coding = model.evaluations?.artificial_analysis_coding_index || 0;
@@ -41,20 +42,19 @@ const App = () => {
  
   const API_KEY = 'aa_UBeRmofLZUpndgJhNQKYXwzEcbqHEGrl';
 
-  // ⭐ API ФУНКЦИЯ С ДОПОЛНИТЕЛЬНЫМИ ДАННЫМИ ⭐
+  // API function with additional data
   const fetchModelsFromAPI = async () => {
-    console.log('📡 Запрос к нашему API endpoint...');
+    console.log('📡 Request to our API endpoint...');
     
     setLoading(true);
     try {
-      // Теперь запрос идет к НАШЕМУ серверу
       const response = await fetch('/api/models');
       
       console.log('📊 Response status:', response.status);
       
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Получен ответ:', result);
+        console.log('✅ Received response:', result);
         
         if (result.success && result.data?.data) {
           const formattedModels = result.data.data.map(model => {
@@ -73,14 +73,14 @@ const App = () => {
               price_per_1k_tokens: blendedPrice,
               release_date: model.release_date || null,
               time_to_first_token: model.median_time_to_first_token_seconds || null,
-              description: `AI модель от ${model.model_creator?.name || 'Unknown'}`,
+              description: `AI model from ${model.model_creator?.name || 'Unknown'}`,
             };
           });
           
-          console.log('✅ Обработано моделей:', formattedModels.length);
+          console.log('✅ Processed models:', formattedModels.length);
           setModels(formattedModels);
         } else {
-          console.log('❌ Нет данных в ответе, используем mock');
+          console.log('❌ No data in response, using mock');
           setModels(mockModels);
         }
       } else {
@@ -96,21 +96,18 @@ const App = () => {
     }
   };
 
-
-
-
   const taskTypes = [
-    { id: 'translation', name: 'Перевод текстов', description: 'Перевод между языками, локализация', icon: '🌐' },
-    { id: 'generation', name: 'Генерация текста', description: 'Создание статей, постов, контента', icon: '✍️' },
-    { id: 'qa', name: 'Ответы на вопросы', description: 'Поиск информации и объяснения', icon: '❓' },
-    { id: 'coding', name: 'Написание кода', description: 'Программирование и отладка', icon: '💻' },
-    { id: 'creative', name: 'Креативные задачи', description: 'Истории, поэзия, сценарии', icon: '🎨' },
-    { id: 'analysis', name: 'Анализ данных', description: 'Обработка и интерпретация информации', icon: '📊' }
+    { id: 'translation', name: 'Text Translation', description: 'Translation between languages, localization', icon: '🌐' },
+    { id: 'generation', name: 'Text Generation', description: 'Creating articles, posts, content', icon: '✍️' },
+    { id: 'qa', name: 'Question Answering', description: 'Information search and explanations', icon: '❓' },
+    { id: 'coding', name: 'Code Writing', description: 'Programming and debugging', icon: '💻' },
+    { id: 'creative', name: 'Creative Tasks', description: 'Stories, poetry, scripts', icon: '🎨' },
+    { id: 'analysis', name: 'Data Analysis', description: 'Data processing and interpretation', icon: '📊' }
   ];
 
   const languages = [
-    { id: 'ru', name: 'Русский', flag: '🇷🇺' },
     { id: 'en', name: 'English', flag: '🇺🇸' },
+    { id: 'ru', name: 'Русский', flag: '🇷🇺' },
     { id: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { id: 'fr', name: 'Français', flag: '🇫🇷' },
     { id: 'es', name: 'Español', flag: '🇪🇸' },
@@ -120,35 +117,35 @@ const App = () => {
   const priorityItems = [
     { 
       key: 'quality', 
-      label: 'Качество результата', 
+      label: 'Result Quality', 
       icon: '⭐', 
-      description: 'Точность, креативность, глубина ответов',
+      description: 'Accuracy, creativity, depth of responses',
       positionComment: {
-        1: 'Главный критерий - готов доплатить за лучшее качество',
-        2: 'Важно, но могу пожертвовать ради других факторов', 
-        3: 'Средняя важность - хорошее качество достаточно'
+        1: 'Main criterion - willing to pay for best quality',
+        2: 'Important, but can sacrifice for other factors', 
+        3: 'Medium importance - good quality is enough'
       }
     },
     { 
       key: 'speed', 
-      label: 'Скорость работы', 
+      label: 'Work Speed', 
       icon: '⚡', 
-      description: 'Время от запроса до получения ответа',
+      description: 'Time from request to response',
       positionComment: {
-        1: 'Критично - каждая секунда на счету',
-        2: 'Важно - желательно быстро',
-        3: 'Терпимо - могу подождать'
+        1: 'Critical - every second counts',
+        2: 'Important - preferably fast',
+        3: 'Tolerable - can wait'
       }
     },
     { 
       key: 'budget', 
-      label: 'Экономичность', 
+      label: 'Economy', 
       icon: '💰', 
-      description: 'Стоимость использования модели',
+      description: 'Model usage cost',
       positionComment: {
-        1: 'Главное - бюджет ограничен',
-        2: 'Важно - ищу баланс цена/качество',
-        3: 'Средне - готов доплатить за лучшее'
+        1: 'Main thing - budget is limited',
+        2: 'Important - looking for price/quality balance',
+        3: 'Medium - willing to pay for better'
       }
     }
   ];
@@ -165,7 +162,7 @@ const App = () => {
       price_per_1k_tokens: 0.03,
       release_date: '2024-04-09',
       time_to_first_token: 1.2,
-      description: 'Самая мощная модель для сложных задач',
+      description: 'Most powerful model for complex tasks',
       best_for: ['general intelligence', 'coding']
     },
     {
@@ -179,7 +176,7 @@ const App = () => {
       price_per_1k_tokens: 0.015,
       release_date: '2024-03-04',
       time_to_first_token: 0.9,
-      description: 'Сбалансированная модель для большинства задач',
+      description: 'Balanced model for most tasks',
       best_for: ['general intelligence']
     },
     {
@@ -193,38 +190,38 @@ const App = () => {
       price_per_1k_tokens: 0.0005,
       release_date: '2023-12-06',
       time_to_first_token: 0.6,
-      description: 'Быстрая и экономичная модель',
+      description: 'Fast and economical model',
       best_for: ['math', 'general']
     }
   ];
 
-  // Улучшенные комментарии
+  // Enhanced comments
   const getQualityComment = (score) => {
-    if (score >= 90) return 'Решает сложные задачи, понимает нюансы';
-    if (score >= 80) return 'Справляется с большинством задач хорошо';
-    if (score >= 70) return 'Выполняет базовые задачи корректно';
-    return 'Подходит для простых задач';
+    if (score >= 90) return 'Handles complex tasks, understands nuances';
+    if (score >= 80) return 'Performs most tasks well';
+    if (score >= 70) return 'Handles basic tasks correctly';
+    return 'Suitable for simple tasks';
   };
 
   const getSpeedComment = (score, timeToFirst) => {
     if (timeToFirst) {
-      if (timeToFirst < 1) return `Отвечает за ${timeToFirst.toFixed(1)}с - очень быстро`;
-      if (timeToFirst < 3) return `Отвечает за ${timeToFirst.toFixed(1)}с - быстро`;
-      if (timeToFirst < 10) return `Отвечает за ${timeToFirst.toFixed(1)}с - средне`;
-      return `Отвечает за ${timeToFirst.toFixed(1)}с - медленно`;
+      if (timeToFirst < 1) return `Responds in ${timeToFirst.toFixed(1)}s - very fast`;
+      if (timeToFirst < 3) return `Responds in ${timeToFirst.toFixed(1)}s - fast`;
+      if (timeToFirst < 10) return `Responds in ${timeToFirst.toFixed(1)}s - average`;
+      return `Responds in ${timeToFirst.toFixed(1)}s - slow`;
     }
     
-    if (score >= 90) return 'Отвечает за 1-2 секунды';
-    if (score >= 80) return 'Отвечает за 3-5 секунд';
-    if (score >= 70) return 'Отвечает за 5-10 секунд';
-    return 'Отвечает более 10 секунд';
+    if (score >= 90) return 'Responds in 1-2 seconds';
+    if (score >= 80) return 'Responds in 3-5 seconds';
+    if (score >= 70) return 'Responds in 5-10 seconds';
+    return 'Responds in 10+ seconds';
   };
 
   const getPriceComment = (price) => {
-    if (price <= 0.001) return 'Очень дешево - экономит бюджет';
-    if (price <= 0.01) return 'Недорого - хороший баланс';
-    if (price <= 0.02) return 'Средняя цена - разумная стоимость';
-    return 'Дорого - премиум качество';
+    if (price <= 0.001) return 'Very cheap - saves budget';
+    if (price <= 0.01) return 'Affordable - good balance';
+    if (price <= 0.02) return 'Average price - reasonable cost';
+    return 'Expensive - premium quality';
   };
 
   const getModelAge = (releaseDate) => {
@@ -233,9 +230,9 @@ const App = () => {
     const now = new Date();
     const months = Math.floor((now - release) / (1000 * 60 * 60 * 24 * 30));
     
-    if (months < 3) return '🆕 Новая модель';
-    if (months < 12) return `📅 ${months} мес. назад`;
-    return `📅 ${Math.floor(months / 12)} г. назад`;
+    if (months < 3) return '🆕 New model';
+    if (months < 12) return `📅 ${months} months ago`;
+    return `📅 ${Math.floor(months / 12)} years ago`;
   };
 
   const getTaskSpecificScore = (model, taskTypes) => {
@@ -249,12 +246,12 @@ const App = () => {
   };
 
   const getScoreComment = (score) => {
-    if (score >= 90) return 'Идеальное совпадение с вашими критериями';
-    if (score >= 80) return 'Отлично подходит для ваших задач';
-    if (score >= 70) return 'Хороший компромисс для ваших потребностей';
-    if (score >= 60) return 'Приемлемый вариант с небольшими компромиссами';
-    if (score >= 50) return 'Средний вариант - есть более подходящие';
-    return 'Слабое соответствие вашим критериям';
+    if (score >= 90) return 'Perfect match for your criteria';
+    if (score >= 80) return 'Excellent fit for your tasks';
+    if (score >= 70) return 'Good compromise for your needs';
+    if (score >= 60) return 'Acceptable option with minor compromises';
+    if (score >= 50) return 'Average option - better alternatives exist';
+    return 'Poor match for your criteria';
   };
 
   const calculatePricePerWord = (pricePerToken, inputLang, outputLang) => {
@@ -276,7 +273,7 @@ const App = () => {
     }));
   };
 
-  // Улучшенные Drag & Drop функции с анимациями
+  // Enhanced Drag & Drop functions with animations
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -341,7 +338,6 @@ const App = () => {
       weights[key] = (importance * positionMultiplier) / totalImportance;
     });
 
-    // Используем специализированные оценки для конкретных задач
     const qualityNorm = getTaskSpecificScore(model, formData.taskTypes);
     const speedNorm = model.speed_score;
     const priceNorm = Math.max(0, 100 - (model.price_per_1k_tokens * 1000));
@@ -354,12 +350,53 @@ const App = () => {
 
     return Math.min(100, Math.round(score));
   };
+  
+  const getModelRank = (model, models, metric) => {
+    const sorted = models.sort((a, b) => b[metric] - a[metric]);
+    const rank = sorted.findIndex(m => m.id === model.id) + 1;
+    const percentile = Math.round((1 - rank / models.length) * 100);
+    return { rank, percentile };
+  };
+
+  const getUniqueFeature = (model, models) => {
+    const features = [];
+    
+    // Newest model
+    if (model.release_date) {
+      const modelDate = new Date(model.release_date);
+      const newestDate = Math.max(...models.map(m => m.release_date ? new Date(m.release_date) : 0));
+      if (modelDate.getTime() === newestDate) {
+        features.push({ label: "Newest Model", color: "bg-green-100 text-green-700" });
+      }
+    }
+    
+    // Fastest
+    const fastestSpeed = Math.max(...models.map(m => m.speed_score));
+    if (model.speed_score === fastestSpeed) {
+      features.push({ label: "Fastest Response", color: "bg-orange-100 text-orange-700" });
+    }
+    
+    // Best value (price/quality ratio)
+    const valueScore = model.quality_score / (model.price_per_1k_tokens * 1000 + 1);
+    const bestValue = Math.max(...models.map(m => m.quality_score / (m.price_per_1k_tokens * 1000 + 1)));
+    if (Math.abs(valueScore - bestValue) < 0.01) {
+      features.push({ label: "Best Value", color: "bg-blue-100 text-blue-700" });
+    }
+    
+    // Highest quality
+    const highestQuality = Math.max(...models.map(m => m.quality_score));
+    if (model.quality_score === highestQuality) {
+      features.push({ label: "Highest Quality", color: "bg-purple-100 text-purple-700" });
+    }
+    
+    return features[0] || null;
+  };
 
   const getRecommendedModels = () => {
     return models
       .map(model => ({
         ...model,
-        best_for: getModelSpecialization(model, formData.taskTypes), // Добавить эту строку
+        best_for: getModelSpecialization(model, formData.taskTypes),
         score: calculateModelScore(model)
       }))
       .sort((a, b) => b.score - a.score);
@@ -383,14 +420,14 @@ const App = () => {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-          {/* Логотип и описание */}
+          {/* Logo and description */}
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold text-blue-600 mb-4">
               GetBestAI
             </h1>
             <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-              Умный подбор AI моделей под ваши задачи. Сравниваем качество, скорость и стоимость, 
-              чтобы найти идеальное решение.
+              Smart AI model selection for your tasks. We compare quality, speed and cost 
+              to find the perfect solution.
             </p>
           </div>
 
@@ -402,17 +439,17 @@ const App = () => {
               <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-sm font-medium">2</div>
             </div>
             <div className="text-center text-sm text-gray-600">
-              Шаг 1 из 2: Настройка параметров
+              Step 1 of 2: Parameter setup
             </div>
           </div>
 
           {/* Task Types Selection */}
           <div className="mb-8">
             <h3 className="text-lg font-medium text-gray-800 mb-2">
-              Типы задач 
+              Task Types 
             </h3>
             <p className="text-sm text-gray-500 mb-4">
-              💡 Выберите что планируете делать с AI. Это поможет подобрать специализированные модели.
+              💡 Choose what you plan to do with AI. This helps select specialized models.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {taskTypes.map(task => (
@@ -435,10 +472,10 @@ const App = () => {
             </div>
           </div>
 
-          {/* Priority Ranking - Улучшенный Drag & Drop */}
+          {/* Priority Ranking - Enhanced Drag & Drop */}
           <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-800 mb-2">Расставьте приоритеты по важности</h3>
-            <p className="text-sm text-gray-500 mb-4">💡 Перетащите критерии в нужные позиции и настройте важность</p>
+            <h3 className="text-lg font-medium text-gray-800 mb-2">Arrange priorities by importance</h3>
+            <p className="text-sm text-gray-500 mb-4">💡 Drag criteria to the right positions and adjust importance with slider (1-10)</p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               {[0, 1, 2].map(position => {
@@ -446,7 +483,7 @@ const App = () => {
                 const item = priorityItems.find(p => p.key === priorityKey);
                 const isDropTarget = dragOver === position;
                 
-                // Цветовое кодирование критериев
+                // Color coding for criteria
                 const getItemColors = (key) => {
                   switch(key) {
                     case 'quality': return { bg: 'bg-green-100', border: 'border-green-400', text: 'text-green-700' };
@@ -460,7 +497,7 @@ const App = () => {
                 
                 return (
                   <div key={position} className="border-2 border-blue-300 bg-gradient-to-b from-blue-50 to-blue-100 rounded-xl p-4 sm:p-6 shadow-lg transition-all duration-300 hover:shadow-xl">
-                    {/* Синий блок - медаль (статичный) с анимацией */}
+                    {/* Blue block - medal (static) with animation */}
                     <div className="flex items-center justify-center mb-4 p-3 bg-white rounded-lg shadow-md transition-all duration-300 hover:scale-105">
                       <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg transition-all duration-300 hover:scale-110 ${
                         position === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : 
@@ -469,10 +506,10 @@ const App = () => {
                       }`}>
                         {position === 0 ? '🥇' : position === 1 ? '🥈' : '🥉'}
                       </div>
-                      <span className="ml-3 text-sm sm:text-base font-semibold text-gray-700">{position + 1} место</span>
+                      <span className="ml-3 text-sm sm:text-base font-semibold text-gray-700">{position + 1} place</span>
                     </div>
                     
-                    {/* Dropzone для красной карточки с улучшенной анимацией */}
+                    {/* Dropzone for red card with enhanced animation */}
                     <div
                       onDragOver={handleDragOver}
                       onDragEnter={(e) => handleDragEnter(e, position)}
@@ -501,9 +538,9 @@ const App = () => {
                       )}
                     </div>
                     
-                    {/* Синий блок - слайдер (статичный) с динамическими цветами */}
+                    {/* Blue block - slider (static) with dynamic colors */}
                     <div className="p-4 bg-white rounded-lg shadow-md text-center">
-                      <div className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Важность</div>
+                      <div className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Importance</div>
                       <input
                         type="range"
                         min="1"
@@ -534,8 +571,8 @@ const App = () => {
                         {formData.priorityImportance[priorityKey] || 5}/10
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {formData.priorityImportance[priorityKey] <= 3 ? 'Низкая' :
-                        formData.priorityImportance[priorityKey] <= 6 ? 'Средняя' : 'Высокая'}
+                        {formData.priorityImportance[priorityKey] <= 3 ? 'Low' :
+                        formData.priorityImportance[priorityKey] <= 6 ? 'Medium' : 'High'}
                       </div>
                     </div>
                   </div>
@@ -543,7 +580,7 @@ const App = () => {
               })}
             </div>
             
-            {/* Добавляем CSS стили для слайдера */}
+            {/* CSS styles for slider */}
             <style jsx>{`
               .slider::-webkit-slider-thumb {
                 appearance: none;
@@ -592,15 +629,15 @@ const App = () => {
 
           {/* Languages */}
           <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-800 mb-2">Языки работы</h3>
+            <h3 className="text-lg font-medium text-gray-800 mb-2">Working Languages</h3>
             <p className="text-sm text-gray-500 mb-4">
-              💡 Разные языки имеют разную эффективность токенизации, что влияет на стоимость.
+              💡 Different languages have different tokenization efficiency, which affects cost.
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Язык ввода данных
+                  Input Language
                 </label>
                 <select
                   value={formData.inputLanguage}
@@ -617,7 +654,7 @@ const App = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Язык вывода результата
+                  Output Language
                 </label>
                 <select
                   value={formData.outputLanguage}
@@ -640,13 +677,13 @@ const App = () => {
             disabled={formData.taskTypes.length === 0}
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
           >
-            Подобрать модели
+            Find Models
             <span>→</span>
           </button>
          
           {formData.taskTypes.length === 0 && (
             <p className="text-center text-sm text-red-500 mt-2">
-              Выберите хотя бы один тип задачи
+              Please select at least one task type
             </p>
           )}
         </div>
@@ -656,7 +693,6 @@ const App = () => {
 
   if (step === 2) {
     const recommendedModels = getRecommendedModels();
-
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto p-6">
@@ -665,7 +701,7 @@ const App = () => {
               onClick={() => setStep(1)}
               className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-1"
             >
-              ← Изменить параметры
+              ← Change Parameters
             </button>
            
             {/* Progress Bar */}
@@ -676,129 +712,229 @@ const App = () => {
                 <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">2</div>
               </div>
               <div className="text-center text-sm text-gray-600">
-                Шаг 2 из 2: Результаты подбора
+                Step 2 of 2: Selection Results
               </div>
             </div>
            
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              Рекомендации для вас
+              Recommendations for You
             </h1>
             <p className="text-gray-600 mb-4">
-              Ранжировано по вашим приоритетам: {formData.priorityOrder.map((p, i) => 
+              Ranked by your priorities: {formData.priorityOrder.map((p, i) => 
                 `${i + 1}. ${priorityItems.find(item => item.key === p)?.label}`
               ).join(', ')}
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              Проанализировано {models.length} моделей, показаны топ-3. 
-              Данные из <a href="https://artificialanalysis.ai/" className="text-blue-600">Artificial Analysis</a>
-              {models === mockModels ? ' (демо-режим)' : ''}
+              Analyzed {models.length} models, showing top 5. 
+              Data from <a href="https://artificialanalysis.ai/" className="text-blue-600">Artificial Analysis</a>
+              {models === mockModels ? ' (demo mode)' : ''}
             </p>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2">Анализируем все доступные модели...</span>
+              <span className="ml-2">Analyzing all available models...</span>
             </div>
           ) : (
-            <div className="space-y-6">
-              {recommendedModels.slice(0, 5).map((model, index) => (
-                <div key={model.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{getMedalEmoji(index + 1)}</span>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-xl font-bold text-gray-800">{model.name}</h3>
-                          <span className="text-gray-500">by {model.creator}</span>
-                          <span className="text-xs text-green-600">{getModelAge(model.release_date)}</span>
-                        </div>
-                        <p className="text-blue-600 text-sm mb-1">
-                          {index === 0 && "🥇 Лучший выбор для ваших задач"}
-                          {index === 1 && "🥈 Отличная альтернатива"}
-                          {index === 2 && "🥉 Хороший бюджетный вариант"}
-                          {index === 3 && "⭐ Достойный вариант"}
-                          {index === 4 && "⭐ Альтернативный выбор"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-blue-600">{model.score}/100</div>
-                      <div className="text-sm text-gray-500">совпадение</div>
-                      <div className="text-xs text-gray-400 mt-1 max-w-32">
-                        {getScoreComment(model.score)}
-                      </div>
-                    </div>
+            <>
+              {/* Price/Quality Chart */}
+              <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold mb-4">Price vs Quality Analysis</h3>
+                <div className="relative h-64 border border-gray-200 rounded">
+                  <svg className="w-full h-full">
+                    {/* Grid lines */}
+                    {[0, 25, 50, 75, 100].map(y => (
+                      <line key={y} x1="0" y1={`${100-y}%`} x2="100%" y2={`${100-y}%`} 
+                            stroke="#e5e7eb" strokeWidth="1"/>
+                    ))}
+                    {[0, 25, 50, 75, 100].map(x => (
+                      <line key={x} x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" 
+                            stroke="#e5e7eb" strokeWidth="1"/>
+                    ))}
+                    
+                    {/* Data points */}
+                    {recommendedModels.slice(0, 5).map((model, index) => {
+                      const maxPrice = Math.max(...recommendedModels.map(m => m.price_per_1k_tokens * 100));
+                      const x = Math.min(95, (model.price_per_1k_tokens * 100 / maxPrice) * 90 + 5);
+                      const y = 95 - (model.score * 0.9 + 5);
+                      
+                      return (
+                        <g key={model.id}>
+                          <circle cx={`${x}%`} cy={`${y}%`} r="6" 
+                                  fill={index < 3 ? "#3b82f6" : "#94a3b8"} 
+                                  className="hover:r-8 transition-all cursor-pointer"/>
+                          <text x={`${x}%`} y={`${y-15}%`} textAnchor="middle" 
+                                className="text-xs font-medium fill-gray-700">
+                            {model.name.split(' ')[0]}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                  
+                  {/* Axes labels */}
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-sm text-gray-600">
+                    Price per 100K tokens ($)
                   </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                    <div className="text-center p-3 bg-gray-50 rounded">
-                    <div className="text-lg font-semibold text-gray-800">
-                      {getTaskSpecificScore(model, formData.taskTypes)}/100
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {formData.taskTypes.includes('coding') ? 'Код' : 'Качество'}
-                    </div>
-                    <div className="text-xs text-blue-600">
-                      {getQualityComment(getTaskSpecificScore(model, formData.taskTypes))}
-                    </div>
-                  </div>
-                    <div className="text-center p-3 bg-gray-50 rounded">
-                      <div className="text-lg font-semibold text-gray-800">{model.speed_score}/100</div>
-                      <div className="text-sm text-gray-500">Скорость</div>
-                      <div className="text-xs text-blue-600">
-                        {getSpeedComment(model.speed_score, model.time_to_first_token)}
-                      </div>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded">
-                      <div className="text-lg font-semibold text-gray-800">${model.price_per_1k_tokens.toFixed(3)}</div>
-                      <div className="text-sm text-gray-500">за 1K токенов</div>
-                      <div className="text-xs font-medium text-gray-700 mt-1">
-                        ${(model.price_per_1k_tokens * 100).toFixed(2)} за 100K
-                      </div>
-                      <div className="text-xs text-blue-600">{getPriceComment(model.price_per_1k_tokens)}</div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        ${calculatePricePerWord(model.price_per_1k_tokens, formData.inputLanguage, formData.outputLanguage)} за слово
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Специализация и описание */}
-                  <div className="mb-4">
-                    <p className="text-gray-700 mb-2">{model.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm">
-                        Специализация:
-                      </span>
-                      {model.best_for?.map(feature => (
-                        <span key={feature} className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
-                          {feature}
-                        </span>
-                      ))}
-                      {formData.taskTypes.includes('coding') && model.coding_score && (
-                        <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-sm">
-                          Код: {model.coding_score}/100
-                        </span>
-                      )}
-                      {(formData.taskTypes.includes('analysis') || formData.taskTypes.includes('qa')) && model.math_score && (
-                        <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-sm">
-                          Математика: {model.math_score}/100
-                        </span>
-                      )}
-                    </div>
-                    <a
-                      href="https://artificialanalysis.ai/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-700 text-sm"
-                    >
-                      Подробные данные на Artificial Analysis →
-                    </a>
+                  <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-600">
+                    Quality Score
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+
+              {/* Model Cards */}
+              <div className="space-y-6">
+                {recommendedModels.slice(0, 5).map((model, index) => {
+                  const uniqueFeature = getUniqueFeature(model, models);
+                  const qualityRank = getModelRank(model, models, 'quality_score');
+                  const speedRank = getModelRank(model, models, 'speed_score');
+                  
+                  return (
+                    <div key={model.id} 
+                        className={`bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${
+                          index === 0 ? 'border-yellow-500 bg-gradient-to-r from-yellow-50 to-white' :
+                          index === 1 ? 'border-gray-400 bg-gradient-to-r from-gray-50 to-white' :
+                          index === 2 ? 'border-amber-500 bg-gradient-to-r from-amber-50 to-white' :
+                          'border-blue-500'
+                        }`}>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <span className="text-2xl sm:text-3xl">{getMedalEmoji(index + 1)}</span>
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <h3 className="text-lg sm:text-xl font-bold text-gray-800">{model.name}</h3>
+                              <span className="text-sm text-gray-500">by {model.creator}</span>
+                              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                {getModelAge(model.release_date)}
+                              </span>
+                            </div>
+                            
+                            {/* Unique features */}
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              <span className="text-xs sm:text-sm text-blue-600 font-medium">
+                                {index === 0 && "🥇 Best choice for your tasks"}
+                                {index === 1 && "🥈 Great alternative"}
+                                {index === 2 && "🥉 Good budget option"}
+                                {index === 3 && "⭐ Worthy option"}
+                                {index === 4 && "⭐ Alternative choice"}
+                              </span>
+                              {uniqueFeature && (
+                                <span className={`text-xs px-2 py-1 rounded-full ${uniqueFeature.color}`}>
+                                  ✨ {uniqueFeature.label}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-center sm:text-right">
+                          <div className="text-2xl sm:text-3xl font-bold text-blue-600">{model.score}/100</div>
+                          <div className="text-sm text-gray-500">match</div>
+                          <div className="text-xs text-gray-400 mt-1 max-w-32">
+                            {getScoreComment(model.score)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Metrics with progress bars */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-medium text-gray-700">
+                              {formData.taskTypes.includes('coding') ? 'Coding' : 'Quality'}
+                            </span>
+                            <span className="text-sm text-blue-600">
+                              Top {qualityRank.percentile}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                            <div className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-1000" 
+                                style={{width: `${getTaskSpecificScore(model, formData.taskTypes)}%`}}>
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="font-semibold">{getTaskSpecificScore(model, formData.taskTypes)}/100</span>
+                            <span className="text-gray-500">{getQualityComment(getTaskSpecificScore(model, formData.taskTypes))}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-medium text-gray-700">Speed</span>
+                            <span className="text-sm text-orange-600">
+                              Top {speedRank.percentile}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                            <div className="bg-gradient-to-r from-orange-400 to-orange-600 h-3 rounded-full transition-all duration-1000" 
+                                style={{width: `${model.speed_score}%`}}>
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="font-semibold">{model.speed_score}/100</span>
+                            <span className="text-gray-500">{getSpeedComment(model.speed_score, model.time_to_first_token)}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-medium text-gray-700">Pricing</span>
+                            <span className="text-sm text-blue-600">
+                              ${(model.price_per_1k_tokens * 100).toFixed(2)} per 100K
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                            <div className="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full transition-all duration-1000" 
+                                style={{width: `${Math.max(0, 100 - (model.price_per_1k_tokens * 1000))}%`}}>
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="font-semibold">${model.price_per_1k_tokens.toFixed(3)}/1K</span>
+                            <span className="text-gray-500">{getPriceComment(model.price_per_1k_tokens)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Specialization and description */}
+                      <div className="mb-4">
+                        <p className="text-gray-700 mb-2">{model.description}</p>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm">
+                            Specialization:
+                          </span>
+                          {model.best_for?.map(feature => (
+                            <span key={feature} className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
+                              {feature}
+                            </span>
+                          ))}
+                          {formData.taskTypes.includes('coding') && model.coding_score && (
+                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-sm">
+                              Code: {model.coding_score}/100
+                            </span>
+                          )}
+                          {(formData.taskTypes.includes('analysis') || formData.taskTypes.includes('qa')) && model.math_score && (
+                            <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-sm">
+                              Math: {model.math_score}/100
+                            </span>
+                          )}
+                        </div>
+                        <a
+                          href="https://artificialanalysis.ai/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700 text-sm"
+                        >
+                          Detailed data on Artificial Analysis →
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}           
         </div>
       </div>
     );
