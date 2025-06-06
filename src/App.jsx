@@ -437,56 +437,79 @@ const App = () => {
 
           {/* Priority Ranking - Улучшенный Drag & Drop */}
           <div className="mb-8">
-          <h3 className="text-lg font-medium text-gray-800 mb-2">Расставьте приоритеты по важности</h3>
-          <p className="text-sm text-gray-500 mb-4">💡 Перетащите критерии в нужные позиции и настройте важность</p>
-          
-          <div className="flex gap-4">
-            {/* Статичные позиции */}
-            <div className="w-20">
-              {[1, 2, 3].map(position => (
-                <div key={position} className="h-24 mb-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${
-                    position === 1 ? 'bg-yellow-500' : position === 2 ? 'bg-gray-400' : 'bg-amber-600'
-                  }`}>
-                    {position === 1 ? '🥇' : position === 2 ? '🥈' : '🥉'}
-                  </div>
-                  <div className="text-xs text-gray-500">{position} место</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Перетаскиваемые критерии */}
-            <div className="flex-1 space-y-3">
-              {formData.priorityOrder.map((priorityKey, index) => {
+            <h3 className="text-lg font-medium text-gray-800 mb-2">Расставьте приоритеты по важности</h3>
+            <p className="text-sm text-gray-500 mb-4">💡 Перетащите критерии в нужные позиции</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[0, 1, 2].map(position => {
+                const priorityKey = formData.priorityOrder[position];
                 const item = priorityItems.find(p => p.key === priorityKey);
+                const isDropTarget = dragOver === position;
+                
                 return (
-                  <div key={priorityKey} draggable className="p-3 border-2 rounded-lg bg-white cursor-move">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{item?.icon}</span>
-                      <div>
-                        <div className="font-medium text-gray-800">{item?.label}</div>
-                        <div className="text-sm text-gray-500">{item?.description}</div>
+                  <div key={position} className="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
+                    {/* Синий блок - медаль (статичный) */}
+                    <div className="flex items-center justify-center mb-3 p-2 bg-blue-100 rounded">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                        position === 0 ? 'bg-yellow-500' : position === 1 ? 'bg-gray-400' : 'bg-amber-600'
+                      }`}>
+                        {position === 0 ? '🥇' : position === 1 ? '🥈' : '🥉'}
+                      </div>
+                      <span className="ml-2 text-sm font-medium">{position + 1} место</span>
+                    </div>
+                    
+                    {/* Dropzone для красной карточки */}
+                    <div
+                      onDragOver={handleDragOver}
+                      onDragEnter={(e) => handleDragEnter(e, position)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, position)}
+                      className={`min-h-24 mb-3 border-2 border-dashed rounded ${
+                        isDropTarget ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                      }`}
+                    >
+                      {item && (
+                        <div
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, position)}
+                          onDragEnd={handleDragEnd}
+                          className="p-3 border-2 border-red-400 bg-red-50 rounded cursor-move"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{item.icon}</span>
+                            <div className="font-medium text-gray-800">{item.label}</div>
+                          </div>
+                          <div className="text-xs text-gray-500">{item.description}</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Синий блок - слайдер (статичный) */}
+                    <div className="p-2 bg-blue-100 rounded text-center">
+                      <div className="text-xs text-gray-600 mb-1">Важность</div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={formData.priorityImportance[priorityKey] || 5}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          priorityImportance: {
+                            ...prev.priorityImportance,
+                            [priorityKey]: parseInt(e.target.value)
+                          }
+                        }))}
+                        className="w-full h-2"
+                      />
+                      <div className="text-sm font-bold text-blue-600">
+                        {formData.priorityImportance[priorityKey] || 5}/10
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
-
-            {/* Слайдеры важности */}
-            <div className="w-32 space-y-3">
-              {formData.priorityOrder.map((priorityKey) => (
-                <div key={priorityKey} className="h-24 flex flex-col justify-center items-center p-2 border rounded-lg">
-                  <div className="text-xs text-gray-500 mb-1">Важность</div>
-                  <input type="range" min="1" max="10" value={formData.priorityImportance[priorityKey]} 
-                    onChange={(e) => setFormData(prev => ({...prev, priorityImportance: {...prev.priorityImportance, [priorityKey]: parseInt(e.target.value)}}))}
-                    className="w-20 h-2" />
-                  <div className="text-sm font-bold text-blue-600">{formData.priorityImportance[priorityKey]}/10</div>
-                </div>
-              ))}
-            </div>
           </div>
-        </div>
 
           {/* Languages */}
           <div className="mb-8">
