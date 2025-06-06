@@ -5,6 +5,7 @@ const App = () => {
   const [formData, setFormData] = useState({
     taskTypes: [],
     priorityOrder: ['quality', 'speed', 'budget'],
+    priorityImportance: { quality: 7, speed: 6, budget: 5 }, // ДОБАВИТЬ ЭТУ СТРОКУ
     inputLanguage: 'ru',
     outputLanguage: 'ru'
   });
@@ -331,11 +332,14 @@ const App = () => {
   };
 
   const calculateModelScore = (model) => {
-    const weights = {
-      [formData.priorityOrder[0]]: 0.5,
-      [formData.priorityOrder[1]]: 0.3,
-      [formData.priorityOrder[2]]: 0.2
-    };
+    const totalImportance = Object.values(formData.priorityImportance).reduce((a, b) => a + b, 0);
+    
+    const weights = {};
+    formData.priorityOrder.forEach((key, index) => {
+      const positionMultiplier = index === 0 ? 1.2 : index === 1 ? 1.0 : 0.8;
+      const importance = formData.priorityImportance[key];
+      weights[key] = (importance * positionMultiplier) / totalImportance;
+    });
 
     // Используем специализированные оценки для конкретных задач
     const qualityNorm = getTaskSpecificScore(model, formData.taskTypes);
@@ -437,7 +441,7 @@ const App = () => {
               Расставьте приоритеты по важности
             </h3>
             <p className="text-sm text-gray-500 mb-4">
-              💡 Перетащите самое важное наверх. 1 место получает больший вес при выборе модели.
+              💡 Перетащите важное наверх и настройте силу влияния ползунком (1-10)
             </p>
             
             <div className="space-y-3">
@@ -468,12 +472,11 @@ const App = () => {
                     
                     {/* Медаль места */}
                     <div className="mr-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-md ${
+                      <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-sm sm:text-lg font-bold text-white shadow-md ${
                         index === 0 ? 'bg-yellow-500' : 
                         index === 1 ? 'bg-gray-400' : 'bg-amber-600'
                       }`}>
                         {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-
                       </div>
                       <div className="text-xs text-center text-gray-500 mt-1">
                         {index + 1} место
@@ -484,13 +487,42 @@ const App = () => {
                     <div className={`flex-1 p-3 rounded-lg transition-all ${
                       isDropTarget ? 'bg-white' : 'bg-gray-50'
                     }`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xl">{item?.icon}</span>
-                        <div className="font-medium text-gray-800">{item?.label}</div>
-                      </div>
-                      <div className="text-sm text-gray-500 mb-2">{item?.description}</div>
-                      <div className="text-xs text-blue-600 font-medium">
-                        {item?.positionComment[index + 1]}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xl">{item?.icon}</span>
+                            <div className="font-medium text-gray-800">{item?.label}</div>
+                          </div>
+                          <div className="text-sm text-gray-500 mb-2">{item?.description}</div>
+                          <div className="text-xs text-blue-600 font-medium">
+                            {item?.positionComment[index + 1]}
+                          </div>
+                        </div>
+                        
+                        {/* Слайдер важности */}
+                        <div className="flex flex-col items-center min-w-32">
+                          <div className="text-xs text-gray-500 mb-1">Важность</div>
+                          <input
+                            type="range"
+                            min="1"
+                            max="10"
+                            value={formData.priorityImportance[priorityKey]}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev,
+                              priorityImportance: {
+                                ...prev.priorityImportance,
+                                [priorityKey]: parseInt(e.target.value)
+                              }
+                            }))}
+                            className="w-20 sm:w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            style={{
+                              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${formData.priorityImportance[priorityKey] * 10}%, #e5e7eb ${formData.priorityImportance[priorityKey] * 10}%, #e5e7eb 100%)`
+                            }}
+                          />
+                          <div className="text-sm font-bold text-blue-600 mt-1">
+                            {formData.priorityImportance[priorityKey]}/10
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -660,6 +692,9 @@ const App = () => {
                     <div className="text-center p-3 bg-gray-50 rounded">
                       <div className="text-lg font-semibold text-gray-800">${model.price_per_1k_tokens.toFixed(3)}</div>
                       <div className="text-sm text-gray-500">за 1K токенов</div>
+                      <div className="text-xs font-medium text-gray-700 mt-1">
+                        ${(model.price_per_1k_tokens * 100).toFixed(1)} за 100K
+                      </div>
                       <div className="text-xs text-blue-600">{getPriceComment(model.price_per_1k_tokens)}</div>
                       <div className="text-xs text-gray-400 mt-1">
                         ${calculatePricePerWord(model.price_per_1k_tokens, formData.inputLanguage, formData.outputLanguage)} за слово
