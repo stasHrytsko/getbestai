@@ -738,50 +738,6 @@ const App = () => {
             </div>
           ) : (
             <>
-              {/* Price/Quality Chart */}
-              <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                <h3 className="text-lg font-semibold mb-4">Price vs Quality Analysis</h3>
-                <div className="relative h-64 border border-gray-200 rounded">
-                  <svg className="w-full h-full">
-                    {/* Grid lines */}
-                    {[0, 25, 50, 75, 100].map(y => (
-                      <line key={y} x1="0" y1={`${100-y}%`} x2="100%" y2={`${100-y}%`} 
-                            stroke="#e5e7eb" strokeWidth="1"/>
-                    ))}
-                    {[0, 25, 50, 75, 100].map(x => (
-                      <line key={x} x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" 
-                            stroke="#e5e7eb" strokeWidth="1"/>
-                    ))}
-                    
-                    {/* Data points */}
-                    {recommendedModels.slice(0, 5).map((model, index) => {
-                      const maxPrice = Math.max(...recommendedModels.map(m => m.price_per_1k_tokens * 100));
-                      const x = Math.min(95, (model.price_per_1k_tokens * 100 / maxPrice) * 90 + 5);
-                      const y = 95 - (model.score * 0.9 + 5);
-                      
-                      return (
-                        <g key={model.id}>
-                          <circle cx={`${x}%`} cy={`${y}%`} r="6" 
-                                  fill={index < 3 ? "#3b82f6" : "#94a3b8"} 
-                                  className="hover:r-8 transition-all cursor-pointer"/>
-                          <text x={`${x}%`} y={`${y-15}%`} textAnchor="middle" 
-                                className="text-xs font-medium fill-gray-700">
-                            {model.name.split(' ')[0]}
-                          </text>
-                        </g>
-                      );
-                    })}
-                  </svg>
-                  
-                  {/* Axes labels */}
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-sm text-gray-600">
-                    Price per 100K tokens ($)
-                  </div>
-                  <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-600">
-                    Quality Score
-                  </div>
-                </div>
-              </div>
 
               {/* Model Cards */}
               <div className="space-y-6">
@@ -891,7 +847,9 @@ const App = () => {
                             </div>
                           </div>
                           <div className="flex justify-between text-xs">
-                            <span className="font-semibold">${model.price_per_1k_tokens.toFixed(3)}/1K</span>
+                            <span className="font-semibold">
+                              ${calculatePricePerWord(model.price_per_1k_tokens, formData.inputLanguage, formData.outputLanguage)} per word
+                            </span>
                             <span className="text-gray-500">{getPriceComment(model.price_per_1k_tokens)}</span>
                           </div>
                         </div>
