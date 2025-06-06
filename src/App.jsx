@@ -437,97 +437,54 @@ const App = () => {
 
           {/* Priority Ranking - Улучшенный Drag & Drop */}
           <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-800 mb-2">
-              Расставьте приоритеты по важности
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-              💡 Перетащите важное наверх и настройте силу влияния ползунком (1-10)
-            </p>
+            <h3 className="text-lg font-medium text-gray-800 mb-2">Расставьте приоритеты по важности</h3>
+            <p className="text-sm text-gray-500 mb-4">💡 Перетащите критерии в нужные позиции и настройте важность</p>
             
-            <div className="space-y-3">
-              {formData.priorityOrder.map((priorityKey, index) => {
-                const item = priorityItems.find(p => p.key === priorityKey);
-                const isDragging = draggedItem === index;
-                const isDropTarget = dragOver === index;
-                
-                return (
-                  <div
-                    key={priorityKey}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, index)}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={handleDragOver}
-                    onDragEnter={(e) => handleDragEnter(e, index)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, index)}
-                    className={`flex items-center p-4 border-2 rounded-lg cursor-move transition-all duration-200 ${
-                      isDragging 
-                        ? 'opacity-50 scale-95 transform rotate-2' 
-                        : isDropTarget
-                        ? 'border-blue-400 bg-blue-50 scale-105 shadow-lg'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                    }`}
-                  >
-                    <span className="text-gray-400 mr-3 text-xl select-none">⋮⋮</span>
-                    
-                    {/* Медаль места */}
-                    <div className="mr-4">
-                      <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-sm sm:text-lg font-bold text-white shadow-md ${
-                        index === 0 ? 'bg-yellow-500' : 
-                        index === 1 ? 'bg-gray-400' : 'bg-amber-600'
-                      }`}>
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                      </div>
-                      <div className="text-xs text-center text-gray-500 mt-1">
-                        {index + 1} место
-                      </div>
-                    </div>
-                    
-                    {/* Карточка критерия */}
-                    <div className={`flex-1 p-3 rounded-lg transition-all ${
-                      isDropTarget ? 'bg-white' : 'bg-gray-50'
+            <div className="flex gap-4">
+              {/* Статичные позиции */}
+              <div className="w-20">
+                {[1, 2, 3].map(position => (
+                  <div key={position} className="h-24 mb-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${
+                      position === 1 ? 'bg-yellow-500' : position === 2 ? 'bg-gray-400' : 'bg-amber-600'
                     }`}>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xl">{item?.icon}</span>
-                            <div className="font-medium text-gray-800">{item?.label}</div>
-                          </div>
-                          <div className="text-sm text-gray-500 mb-2">{item?.description}</div>
-                          <div className="text-xs text-blue-600 font-medium">
-                            {item?.positionComment[index + 1]}
-                          </div>
-                        </div>
-                        
-                        {/* Слайдер важности */}
-                        <div className="flex flex-col items-center min-w-32">
-                          <div className="text-xs text-gray-500 mb-1">Важность</div>
-                          <input
-                            type="range"
-                            min="1"
-                            max="10"
-                            value={formData.priorityImportance[priorityKey]}
-                            onChange={(e) => setFormData(prev => ({
-                              ...prev,
-                              priorityImportance: {
-                                ...prev.priorityImportance,
-                                [priorityKey]: parseInt(e.target.value)
-                              }
-                            }))}
-                            className="w-20 sm:w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                            style={{
-                              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${formData.priorityImportance[priorityKey] * 10}%, #e5e7eb ${formData.priorityImportance[priorityKey] * 10}%, #e5e7eb 100%)`
-                            }}
-                          />
-                          <div className="text-sm font-bold text-blue-600 mt-1">
-                            {formData.priorityImportance[priorityKey]}/10
-                          </div>
+                      {position === 1 ? '🥇' : position === 2 ? '🥈' : '🥉'}
+                    </div>
+                    <div className="text-xs text-gray-500">{position} место</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Перетаскиваемые критерии */}
+              <div className="flex-1 space-y-3">
+                {formData.priorityOrder.map((priorityKey, index) => {
+                  const item = priorityItems.find(p => p.key === priorityKey);
+                  return (
+                    <div key={priorityKey} draggable className="p-3 border-2 rounded-lg bg-white cursor-move">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{item?.icon}</span>
+                        <div>
+                          <div className="font-medium text-gray-800">{item?.label}</div>
+                          <div className="text-sm text-gray-500">{item?.description}</div>
                         </div>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              {/* Слайдеры важности */}
+              <div className="w-32 space-y-3">
+                {formData.priorityOrder.map((priorityKey) => (
+                  <div key={priorityKey} className="h-24 flex flex-col justify-center items-center p-2 border rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Важность</div>
+                    <input type="range" min="1" max="10" value={formData.priorityImportance[priorityKey]} 
+                      onChange={(e) => setFormData(prev => ({...prev, priorityImportance: {...prev.priorityImportance, [priorityKey]: parseInt(e.target.value)}}))}
+                      className="w-20 h-2" />
+                    <div className="text-sm font-bold text-blue-600">{formData.priorityImportance[priorityKey]}/10</div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
 
@@ -643,7 +600,7 @@ const App = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {recommendedModels.slice(0, 3).map((model, index) => (
+              {recommendedModels.slice(0, 5).map((model, index) => (
                 <div key={model.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -658,6 +615,8 @@ const App = () => {
                           {index === 0 && "🥇 Лучший выбор для ваших задач"}
                           {index === 1 && "🥈 Отличная альтернатива"}
                           {index === 2 && "🥉 Хороший бюджетный вариант"}
+                          {index === 3 && "⭐ Достойный вариант"}
+                          {index === 4 && "⭐ Альтернативный выбор"}
                         </p>
                       </div>
                     </div>
@@ -693,7 +652,7 @@ const App = () => {
                       <div className="text-lg font-semibold text-gray-800">${model.price_per_1k_tokens.toFixed(3)}</div>
                       <div className="text-sm text-gray-500">за 1K токенов</div>
                       <div className="text-xs font-medium text-gray-700 mt-1">
-                        ${(model.price_per_1k_tokens * 100).toFixed(1)} за 100K
+                        ${(model.price_per_1k_tokens * 100).toFixed(2)} за 100K
                       </div>
                       <div className="text-xs text-blue-600">{getPriceComment(model.price_per_1k_tokens)}</div>
                       <div className="text-xs text-gray-400 mt-1">
