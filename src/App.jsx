@@ -107,7 +107,7 @@ const App = () => {
 
   const languages = [
     { id: 'en', name: 'English', flag: '🇺🇸' },
-    { id: 'ru', name: 'Русский', flag: '🇷🇺' },
+    { id: 'ua', name: 'Українська', flag: 'ua' },
     { id: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { id: 'fr', name: 'Français', flag: '🇫🇷' },
     { id: 'es', name: 'Español', flag: '🇪🇸' },
@@ -256,7 +256,7 @@ const App = () => {
 
   const calculatePricePerWord = (pricePerToken, inputLang, outputLang) => {
     const tokenRatios = {
-      'en': 0.75, 'ru': 0.5, 'de': 1.2, 'fr': 1.1, 'es': 1.0, 'zh': 1.8
+      'en': 0.75, 'ua': 0.5, 'de': 1.2, 'fr': 1.1, 'es': 1.0, 'zh': 1.8
     };
     const inputRatio = tokenRatios[inputLang] || 1;
     const outputRatio = tokenRatios[outputLang] || 1;
