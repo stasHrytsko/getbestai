@@ -438,34 +438,50 @@ const App = () => {
           {/* Priority Ranking - Улучшенный Drag & Drop */}
           <div className="mb-8">
             <h3 className="text-lg font-medium text-gray-800 mb-2">Расставьте приоритеты по важности</h3>
-            <p className="text-sm text-gray-500 mb-4">💡 Перетащите критерии в нужные позиции</p>
+            <p className="text-sm text-gray-500 mb-4">💡 Перетащите критерии в нужные позиции и настройте важность</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               {[0, 1, 2].map(position => {
                 const priorityKey = formData.priorityOrder[position];
                 const item = priorityItems.find(p => p.key === priorityKey);
                 const isDropTarget = dragOver === position;
                 
+                // Цветовое кодирование критериев
+                const getItemColors = (key) => {
+                  switch(key) {
+                    case 'quality': return { bg: 'bg-green-100', border: 'border-green-400', text: 'text-green-700' };
+                    case 'speed': return { bg: 'bg-orange-100', border: 'border-orange-400', text: 'text-orange-700' };
+                    case 'budget': return { bg: 'bg-blue-100', border: 'border-blue-400', text: 'text-blue-700' };
+                    default: return { bg: 'bg-gray-100', border: 'border-gray-400', text: 'text-gray-700' };
+                  }
+                };
+                
+                const colors = getItemColors(priorityKey);
+                
                 return (
-                  <div key={position} className="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
-                    {/* Синий блок - медаль (статичный) */}
-                    <div className="flex items-center justify-center mb-3 p-2 bg-blue-100 rounded">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                        position === 0 ? 'bg-yellow-500' : position === 1 ? 'bg-gray-400' : 'bg-amber-600'
+                  <div key={position} className="border-2 border-blue-300 bg-gradient-to-b from-blue-50 to-blue-100 rounded-xl p-4 sm:p-6 shadow-lg transition-all duration-300 hover:shadow-xl">
+                    {/* Синий блок - медаль (статичный) с анимацией */}
+                    <div className="flex items-center justify-center mb-4 p-3 bg-white rounded-lg shadow-md transition-all duration-300 hover:scale-105">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg transition-all duration-300 hover:scale-110 ${
+                        position === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : 
+                        position === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-600' : 
+                        'bg-gradient-to-br from-amber-500 to-amber-700'
                       }`}>
                         {position === 0 ? '🥇' : position === 1 ? '🥈' : '🥉'}
                       </div>
-                      <span className="ml-2 text-sm font-medium">{position + 1} место</span>
+                      <span className="ml-3 text-sm sm:text-base font-semibold text-gray-700">{position + 1} место</span>
                     </div>
                     
-                    {/* Dropzone для красной карточки */}
+                    {/* Dropzone для красной карточки с улучшенной анимацией */}
                     <div
                       onDragOver={handleDragOver}
                       onDragEnter={(e) => handleDragEnter(e, position)}
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, position)}
-                      className={`min-h-24 mb-3 border-2 border-dashed rounded ${
-                        isDropTarget ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                      className={`min-h-32 sm:min-h-28 mb-4 border-3 border-dashed rounded-xl transition-all duration-300 ${
+                        isDropTarget 
+                          ? 'border-red-400 bg-red-50 scale-105 shadow-lg animate-pulse' 
+                          : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                       }`}
                     >
                       {item && (
@@ -473,20 +489,21 @@ const App = () => {
                           draggable
                           onDragStart={(e) => handleDragStart(e, position)}
                           onDragEnd={handleDragEnd}
-                          className="p-3 border-2 border-red-400 bg-red-50 rounded cursor-move"
+                          className={`h-full p-4 border-2 ${colors.border} ${colors.bg} rounded-lg cursor-move transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:rotate-1 active:scale-95 touch-manipulation`}
+                          style={{ userSelect: 'none' }}
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{item.icon}</span>
-                            <div className="font-medium text-gray-800">{item.label}</div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-xl sm:text-2xl">{item.icon}</span>
+                            <div className={`font-semibold text-sm sm:text-base ${colors.text}`}>{item.label}</div>
                           </div>
-                          <div className="text-xs text-gray-500">{item.description}</div>
+                          <div className="text-xs sm:text-sm text-gray-600 leading-relaxed">{item.description}</div>
                         </div>
                       )}
                     </div>
                     
-                    {/* Синий блок - слайдер (статичный) */}
-                    <div className="p-2 bg-blue-100 rounded text-center">
-                      <div className="text-xs text-gray-600 mb-1">Важность</div>
+                    {/* Синий блок - слайдер (статичный) с динамическими цветами */}
+                    <div className="p-4 bg-white rounded-lg shadow-md text-center">
+                      <div className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Важность</div>
                       <input
                         type="range"
                         min="1"
@@ -499,16 +516,78 @@ const App = () => {
                             [priorityKey]: parseInt(e.target.value)
                           }
                         }))}
-                        className="w-full h-2"
+                        className="w-full h-3 rounded-lg appearance-none cursor-pointer transition-all duration-200 slider"
+                        style={{
+                          background: `linear-gradient(to right, 
+                            ${formData.priorityImportance[priorityKey] <= 3 ? '#ef4444' : 
+                              formData.priorityImportance[priorityKey] <= 6 ? '#f59e0b' : '#10b981'} 0%, 
+                            ${formData.priorityImportance[priorityKey] <= 3 ? '#ef4444' : 
+                              formData.priorityImportance[priorityKey] <= 6 ? '#f59e0b' : '#10b981'} ${(formData.priorityImportance[priorityKey] || 5) * 10}%, 
+                            #e5e7eb ${(formData.priorityImportance[priorityKey] || 5) * 10}%, 
+                            #e5e7eb 100%)`
+                        }}
                       />
-                      <div className="text-sm font-bold text-blue-600">
+                      <div className={`text-base sm:text-lg font-bold mt-2 transition-colors duration-300 ${
+                        formData.priorityImportance[priorityKey] <= 3 ? 'text-red-600' :
+                        formData.priorityImportance[priorityKey] <= 6 ? 'text-orange-600' : 'text-green-600'
+                      }`}>
                         {formData.priorityImportance[priorityKey] || 5}/10
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {formData.priorityImportance[priorityKey] <= 3 ? 'Низкая' :
+                        formData.priorityImportance[priorityKey] <= 6 ? 'Средняя' : 'Высокая'}
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+            
+            {/* Добавляем CSS стили для слайдера */}
+            <style jsx>{`
+              .slider::-webkit-slider-thumb {
+                appearance: none;
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #ffffff;
+                border: 2px solid currentColor;
+                cursor: pointer;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                transition: all 0.2s ease;
+              }
+              
+              .slider::-webkit-slider-thumb:hover {
+                transform: scale(1.2);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+              }
+              
+              .slider::-moz-range-thumb {
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #ffffff;
+                border: 2px solid currentColor;
+                cursor: pointer;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+              }
+              
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+              }
+              
+              .animate-pulse {
+                animation: pulse 1.5s infinite;
+              }
+              
+              @media (max-width: 640px) {
+                .touch-manipulation {
+                  touch-action: manipulation;
+                  min-height: 60px;
+                }
+              }
+            `}</style>
           </div>
 
           {/* Languages */}
