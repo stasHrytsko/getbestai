@@ -7,7 +7,8 @@ const App = () => {
     priorityOrder: ['quality', 'speed', 'budget'],
     priorityImportance: { quality: 7, speed: 6, budget: 5 },
     inputLanguage: 'en',
-    outputLanguage: 'en'
+    outputLanguage: 'en',
+    excludedProviders: []
   });
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,7 @@ const App = () => {
   const API_KEY = 'aa_UBeRmofLZUpndgJhNQKYXwzEcbqHEGrl';
 
   // API function with additional data
-  const fetchModelsFromAPI = async () => {
+  const fetchModelsFromAPI = async (excluded = []) => {
     console.log('📡 Request to our API endpoint...');
     
     setLoading(true);
@@ -77,20 +78,24 @@ const App = () => {
             };
           });
           
-          console.log('✅ Processed models:', formattedModels.length);
-          setModels(formattedModels);
+          const filtered = formattedModels.filter(m => !excluded.includes(m.creator));
+          console.log('✅ Processed models:', filtered.length);
+          setModels(filtered);
         } else {
           console.log('❌ No data in response, using mock');
-          setModels(mockModels);
+          const filteredMock = mockModels.filter(m => !excluded.includes(m.creator));
+          setModels(filteredMock);
         }
       } else {
         const error = await response.json();
         console.error('❌ API Error:', error);
-        setModels(mockModels);
+        const filteredMock = mockModels.filter(m => !excluded.includes(m.creator));
+        setModels(filteredMock);
       }
     } catch (error) {
       console.error('❌ Network Error:', error);
-      setModels(mockModels);
+      const filteredMock = mockModels.filter(m => !excluded.includes(m.creator));
+      setModels(filteredMock);
     } finally {
       setLoading(false);
     }
@@ -113,6 +118,8 @@ const App = () => {
     { id: 'es', name: 'Español', flag: '🇪🇸' },
     { id: 'zh', name: '中文', flag: '🇨🇳' }
   ];
+
+  const providers = ['OpenAI', 'Anthropic', 'Google', 'Mistral', 'Cohere', 'Meta'];
 
   const priorityItems = [
     { 
@@ -412,7 +419,7 @@ const App = () => {
   };
 
   const handleNextStep = async () => {
-    await fetchModelsFromAPI();
+    await fetchModelsFromAPI(formData.excludedProviders);
     setStep(2);
   };
 
@@ -440,8 +447,11 @@ const App = () => {
             </div>
             <div className="text-center text-sm text-gray-600">
               Step 1 of 2: Parameter setup
-            </div>
           </div>
+        </div>
+
+
+
 
           {/* Task Types Selection */}
           <div className="mb-8">
@@ -668,6 +678,39 @@ const App = () => {
                   ))}
                 </select>
               </div>
+            </div>
+          </div>
+
+          {/* Model Providers */}
+          <div className="mb-8">
+            <h3 className="text-lg font-medium text-gray-800 mb-2">Model Providers</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              💡 Uncheck providers you don't want to evaluate.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {providers.map(provider => (
+                <label key={provider} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="form-checkbox"
+                    checked={!formData.excludedProviders.includes(provider)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData(prev => ({
+                          ...prev,
+                          excludedProviders: prev.excludedProviders.filter(p => p !== provider)
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          excludedProviders: [...prev.excludedProviders, provider]
+                        }));
+                      }
+                    }}
+                  />
+                  <span className="text-sm text-gray-700">{provider}</span>
+                </label>
+              ))}
             </div>
           </div>
 
