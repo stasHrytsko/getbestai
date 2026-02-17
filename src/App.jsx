@@ -248,6 +248,7 @@ const App = () => {
   /* ── API ── */
   const fetchModelsFromAPI = async (excluded = []) => {
     setLoading(true);
+    let loaded = false;
     try {
       const res = await fetch('/api/models');
       if (res.ok) {
@@ -257,26 +258,32 @@ const App = () => {
             const inputPrice  = m.pricing?.price_1m_input_tokens  || 0;
             const outputPrice = m.pricing?.price_1m_output_tokens || 0;
             return {
-              id:                m.id,
-              name:              m.name,
-              creator:           m.model_creator?.name || 'Unknown',
-              quality_score:     Math.round(m.evaluations?.artificial_analysis_intelligence_index || 50),
-              speed_score:       Math.min(100, Math.round((m.median_output_tokens_per_second || 50) / 2)),
-              coding_score:      Math.round(m.evaluations?.artificial_analysis_coding_index || 50),
-              math_score:        Math.round(m.evaluations?.artificial_analysis_math_index   || 50),
+              id:                  m.id,
+              name:                m.name,
+              creator:             m.model_creator?.name || 'Unknown',
+              quality_score:       Math.round(m.evaluations?.artificial_analysis_intelligence_index || 50),
+              speed_score:         Math.min(100, Math.round((m.median_output_tokens_per_second || 50) / 2)),
+              coding_score:        Math.round(m.evaluations?.artificial_analysis_coding_index || 50),
+              math_score:          Math.round(m.evaluations?.artificial_analysis_math_index   || 50),
               price_per_1k_tokens: (inputPrice * 3 + outputPrice * 1) / 4 / 1000,
-              release_date:      m.release_date || null,
+              release_date:        m.release_date || null,
               time_to_first_token: m.median_time_to_first_token_seconds || null,
-              description:       `AI model from ${m.model_creator?.name || 'Unknown'}`,
+              description:         `AI model from ${m.model_creator?.name || 'Unknown'}`,
             };
           });
           setModels(formatted.filter(m => !excluded.includes(m.creator)));
-          return;
+          loaded = true;
         }
       }
-    } catch (_) { /* fall through */ }
-    setModels(MOCK_MODELS.filter(m => !excluded.includes(m.creator)));
-    setLoading(false);
+    } catch (err) {
+      console.error('[fetchModels] error:', err);
+    } finally {
+      if (!loaded) {
+        // Fallback to mock data if API failed or returned no usable data
+        setModels(MOCK_MODELS.filter(m => !excluded.includes(m.creator)));
+      }
+      setLoading(false);
+    }
   };
 
   const handleNextStep = async () => {
