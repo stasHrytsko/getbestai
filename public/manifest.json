@@ -1,0 +1,18 @@
+{
+  "name": "GetBestAI",
+  "short_name": "GetBestAI",
+  "description": "Find the best AI model for your tasks",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
