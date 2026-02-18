@@ -44,7 +44,10 @@ const LANGUAGES = [
   { id: 'zh', name: '中文',        flag: '🇨🇳' },
 ];
 
-const PROVIDERS = ['OpenAI', 'Anthropic', 'Google', 'Mistral', 'Cohere', 'Meta'];
+const PROVIDERS = [
+  'OpenAI', 'Anthropic', 'Google', 'Meta', 'Mistral', 'Cohere',
+  'DeepSeek', 'Qwen', 'Microsoft', 'Amazon', 'AI21 Labs', 'Nvidia',
+];
 
 const PRIORITY_ITEMS = [
   {
@@ -264,6 +267,25 @@ function getMedalEmoji(place) {
   return place === 1 ? '🥇' : place === 2 ? '🥈' : place === 3 ? '🥉' : '⭐';
 }
 
+/** Normalise API creator names to match PROVIDERS entries */
+function normalizeCreator(name) {
+  if (!name) return 'Unknown';
+  const n = name.toLowerCase();
+  if (n.includes('openai'))                          return 'OpenAI';
+  if (n.includes('anthropic'))                       return 'Anthropic';
+  if (n.includes('google') || n.includes('deepmind'))return 'Google';
+  if (n.includes('meta') || n.includes('llama'))     return 'Meta';
+  if (n.includes('mistral'))                         return 'Mistral';
+  if (n.includes('cohere'))                          return 'Cohere';
+  if (n.includes('deepseek'))                        return 'DeepSeek';
+  if (n.includes('alibaba') || n.includes('qwen'))   return 'Qwen';
+  if (n.includes('microsoft') || n.includes('phi'))  return 'Microsoft';
+  if (n.includes('amazon') || n.includes('aws') || n.includes('titan')) return 'Amazon';
+  if (n.includes('ai21'))                            return 'AI21 Labs';
+  if (n.includes('nvidia') || n.includes('nemotron'))return 'Nvidia';
+  return name;
+}
+
 /* ─────────────────────────────────────────────────────────────
    D1: SORTABLE PRIORITY ITEM (@dnd-kit)
 ───────────────────────────────────────────────────────────── */
@@ -370,19 +392,7 @@ const App = () => {
     });
   };
 
-  /* ── Score ── */
-  const calculateModelScore = (model) => {
-    const qualityNorm = getTaskQualityScore(model, formData.taskTypes);
-    const speedNorm   = getModelSpeedScore(model, formData.taskTypes);
-    const priceNorm   = model.price_per_1k_tokens != null
-      ? Math.max(0, 100 - model.price_per_1k_tokens * 1000)
-      : 100;
-    const scoreMap = { quality: qualityNorm, speed: speedNorm, budget: priceNorm };
-    const total = formData.priorityOrder.reduce(
-      (sum, key, i) => sum + scoreMap[key] * POSITION_WEIGHTS[i], 0
-    );
-    return Math.min(100, Math.round(total));
-  };
+  /* ── Score (computed inside getRecommendedModels with normalized budget) ── */
 
   /* ── Unique feature badges ── */
   const getUniqueFeature = (model, allModels, taskTypes) => {
@@ -405,33 +415,54 @@ const App = () => {
     return features[0] || null;
   };
 
-  /* ── Recommended models with value scores (Task 4) ── */
+  /* ── Recommended models with value + budget scores ── */
   const getRecommendedModels = () => {
     const EPSILON = 0.01;
-    const enriched = models.map(m => {
+
+    // First pass: raw per-model metrics
+    const raw = models.map(m => {
       const task_quality = getTaskQualityScore(m, formData.taskTypes);
       const speed_score  = getModelSpeedScore(m, formData.taskTypes);
       return {
         ...m,
-        best_for:   getModelSpecialization(m, formData.taskTypes),
         task_quality,
         speed_score,
-        score:      calculateModelScore(m),
-        _valueRaw:  task_quality / ((m.price_input_per_1m || 0) + EPSILON),
+        best_for:  getModelSpecialization(m, formData.taskTypes),
+        _valueRaw: task_quality / ((m.price_input_per_1m || 0) + EPSILON),
       };
     });
-    const vals   = enriched.map(m => m._valueRaw);
+
+    // Budget score: log-scale normalised 0–100 across ALL models.
+    // Log scale prevents $0.001/1k and $0.002/1k both getting ≈99 while
+    // expensive models get 70–80, giving a fairer distribution.
+    const logPrices = raw.map(m => Math.log1p((m.price_per_1k_tokens || 0) * 1000));
+    const minLog    = Math.min(...logPrices);
+    const maxLog    = Math.max(...logPrices, minLog + 0.001);
+
+    // Value score normalisation
+    const vals   = raw.map(m => m._valueRaw);
     const maxVal = Math.max(...vals, 1);
     const minVal = Math.min(...vals);
-    return enriched
+
+    return raw
       .map(m => {
+        // Cheaper = higher budget score (inverted, log scale)
+        const logP         = Math.log1p((m.price_per_1k_tokens || 0) * 1000);
+        const budget_score = Math.round((1 - (logP - minLog) / (maxLog - minLog)) * 100);
+
+        const scoreMap = { quality: m.task_quality, speed: m.speed_score, budget: budget_score };
+        const score    = Math.min(100, Math.round(
+          formData.priorityOrder.reduce((sum, key, i) => sum + scoreMap[key] * POSITION_WEIGHTS[i], 0)
+        ));
+
         const valueNorm = maxVal > minVal
           ? Math.round((m._valueRaw - minVal) / (maxVal - minVal) * 100) : 50;
         const value_label =
           valueNorm >= 90 ? 'Best value'  :
           valueNorm >= 70 ? 'Good value'  :
           valueNorm <= 20 ? 'Premium'     : null;
-        return { ...m, value_score: valueNorm, value_label };
+
+        return { ...m, budget_score, score, value_score: valueNorm, value_label };
       })
       .sort((a, b) => b.score - a.score);
   };
@@ -457,7 +488,7 @@ const App = () => {
             return {
               id:                  m.id,
               name:                m.name,
-              creator:             m.model_creator?.name || 'Unknown',
+              creator:             normalizeCreator(m.model_creator?.name),
               quality_score:       qi != null ? Math.round(qi) : null,
               coding_score:        qc != null ? Math.round(qc) : null,
               math_score:          qm != null ? Math.round(qm) : null,
@@ -767,6 +798,7 @@ const App = () => {
                     { label: 'Speed',             render: m => `${m.speed_score}/100` },
                     { label: 'Monthly Cost',      render: m => formatMonthlyCost(calcMonthlyCost(m, formData.taskTypes, requestsPerDay)) },
                     { label: 'Time to 1st Token', render: m => (m.ttft_answer ?? m.time_to_first_token) ? `${(m.ttft_answer ?? m.time_to_first_token).toFixed(1)}s` : '—' },
+                    { label: 'Budget Score',      render: m => `${m.budget_score}/100` },
                     { label: 'Value Score',       render: m => `${m.value_score}/100` },
                     { label: 'Release',           render: m => m.release_date || '—' },
                   ].map(({ label, render }) => (
@@ -929,7 +961,7 @@ const App = () => {
                       <div className="bg-white px-3 py-2.5">
                         <p className="text-[11px] font-semibold text-blue-600 mb-1.5">Economy</p>
                         <div className="w-full bg-gray-100 rounded-full h-1.5 mb-1">
-                          <div className="bg-gradient-to-r from-blue-400 to-blue-500 h-1.5 rounded-full" style={{ width: `${Math.max(0, 100 - (model.price_per_1k_tokens || 0) * 1000)}%` }} />
+                          <div className="bg-gradient-to-r from-blue-400 to-blue-500 h-1.5 rounded-full" style={{ width: `${model.budget_score ?? 0}%` }} />
                         </div>
                         <div className="text-sm font-extrabold text-gray-900 leading-none">
                           {formatMonthlyCost(monthlyCost)}
