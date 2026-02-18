@@ -471,6 +471,15 @@ const App = () => {
   const fetchModelsFromAPI = async (excluded = []) => {
     setLoading(true);
     let loaded = false;
+
+    // If ANY providers are unchecked, show ONLY the checked ones.
+    // This ensures models from providers not in the list (xAI, etc.)
+    // are also excluded when the user has made explicit selections.
+    const activeProviders = new Set(PROVIDERS.filter(p => !excluded.includes(p)));
+    const filterByProvider = (m) => {
+      if (excluded.length === 0) return true; // all checked → show everything
+      return activeProviders.has(m.creator);
+    };
     try {
       const res = await fetch('/api/models');
       if (res.ok) {
@@ -502,14 +511,14 @@ const App = () => {
               description:         `AI model from ${m.model_creator?.name || 'Unknown'}`,
             };
           });
-          setModels(formatted.filter(m => !excluded.includes(m.creator)));
+          setModels(formatted.filter(filterByProvider));
           loaded = true;
         }
       }
     } catch (err) {
       console.error('[fetchModels] error:', err);
     } finally {
-      if (!loaded) setModels(MOCK_MODELS.filter(m => !excluded.includes(m.creator)));
+      if (!loaded) setModels(MOCK_MODELS.filter(filterByProvider));
       setLoading(false);
     }
   };
