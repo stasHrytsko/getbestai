@@ -541,12 +541,12 @@ const App = () => {
 
     return (
       <div className="min-h-screen bg-slate-50 font-sans">
-        <div className="max-w-[480px] mx-auto px-4 pb-[132px] pt-8">
+        <div className="max-w-[480px] lg:max-w-5xl mx-auto px-4 lg:px-8 pb-[132px] lg:pb-16 pt-8 lg:pt-14">
 
           {/* ── D5: Header ── */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-[28px] font-bold text-gray-900 tracking-[-0.02em] leading-none">
+              <h1 className="text-[28px] lg:text-[36px] font-bold text-gray-900 tracking-[-0.02em] leading-none">
                 GetBestAI
               </h1>
               <span className="text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full whitespace-nowrap">
@@ -566,10 +566,13 @@ const App = () => {
             <span className="ml-1 text-xs text-gray-400">Configure preferences</span>
           </div>
 
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:items-start">
+          <div>
+
           {/* ── D2: Task Types — 3-column compact grid ── */}
           <section className="mb-8">
             <SectionLabel>What will you use it for?</SectionLabel>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 lg:gap-3">
               {TASK_TYPES.map(({ id, name, description, Icon }) => {
                 const active = formData.taskTypes.includes(id);
                 return (
@@ -581,7 +584,7 @@ const App = () => {
                         ? p.taskTypes.filter(x => x !== id)
                         : [...p.taskTypes, id],
                     }))}
-                    className={`relative flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border-2 transition-all duration-150 ${
+                    className={`relative flex flex-col items-center gap-1.5 lg:gap-2 px-2 py-3 lg:py-6 rounded-xl border-2 transition-all duration-150 ${
                       active
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 bg-white hover:border-gray-300'
@@ -609,6 +612,9 @@ const App = () => {
             </div>
           </section>
 
+          </div>
+
+          <div className="lg:sticky lg:top-8">
           {/* ── D1: Priority Ranking — vertical @dnd-kit list ── */}
           <section className="mb-8">
             <SectionLabel>What matters most?</SectionLabel>
@@ -735,10 +741,21 @@ const App = () => {
               </div>
             )}
           </section>
+
+          {/* Desktop CTA */}
+          <button
+            onClick={handleNextStep}
+            disabled={formData.taskTypes.length === 0}
+            className="hidden lg:flex w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3.5 px-6 rounded-xl font-semibold text-sm transition-all shadow-lg items-center justify-center gap-2"
+          >
+            Find Best Models →
+          </button>
+          </div>
+          </div>
         </div>
 
         {/* ── D4: Sticky CTA Button with gradient fade ── */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
           {/* Gradient fade */}
           <div className="h-16 bg-gradient-to-t from-slate-50 to-transparent" />
           {/* Button container */}
@@ -831,7 +848,7 @@ const App = () => {
 
         {/* ── Sticky Context Header ── */}
         <div className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-200 shadow-sm">
-          <div className="max-w-[480px] mx-auto px-4 py-3 flex items-center justify-between gap-2">
+          <div className="max-w-[480px] lg:max-w-6xl mx-auto px-4 lg:px-8 py-3 flex items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-1.5 text-xs min-w-0">
               <span className="text-gray-400">For:</span>
               <span className="font-semibold text-gray-800 truncate">{selectedTaskNames}</span>
@@ -847,11 +864,12 @@ const App = () => {
           </div>
         </div>
 
-        <div className="max-w-[480px] mx-auto px-4 py-6">
+        <div className="max-w-[480px] lg:max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-10 lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-8 lg:items-start">
 
+          <aside className="lg:sticky lg:top-20">
           {/* Header */}
           <div className="mb-5">
-            <h1 className="text-[22px] font-bold text-gray-900 tracking-[-0.02em] mb-0.5">
+            <h1 className="text-[22px] lg:text-[28px] font-bold text-gray-900 tracking-[-0.02em] mb-0.5">
               Recommendations
             </h1>
             <p className="text-xs text-gray-400">
@@ -863,18 +881,20 @@ const App = () => {
           </div>
 
           {/* ── Task 5: Requests-per-day slider ── */}
-          <div className="flex items-center gap-3 bg-slate-100 rounded-xl px-4 py-2.5 mb-5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 bg-slate-100 rounded-xl px-4 py-2.5 lg:py-4 mb-5">
             <TrendingUp size={14} className="text-slate-500 shrink-0" />
             <span className="text-xs font-medium text-gray-600 whitespace-nowrap">Req/day:</span>
             <input
               type="range" min="1" max="200" value={requestsPerDay}
               onChange={e => setRequestsPerDay(Number(e.target.value))}
-              className="flex-1 accent-blue-600 h-1.5 cursor-pointer"
+              className="flex-1 lg:basis-full lg:order-1 accent-blue-600 h-1.5 cursor-pointer"
             />
-            <span className="text-xs font-bold text-blue-600 w-8 text-right">{requestsPerDay}</span>
-            <span className="text-[11px] text-gray-400 whitespace-nowrap">({preset.inputTokens}↑ {preset.outputTokens}↓ tok)</span>
+            <span className="text-xs font-bold text-blue-600 w-8 text-right lg:ml-auto">{requestsPerDay}</span>
+            <span className="text-[11px] text-gray-400 whitespace-nowrap lg:basis-full lg:order-2">({preset.inputTokens}↑ {preset.outputTokens}↓ tok)</span>
           </div>
+          </aside>
 
+          <main className="min-w-0">
           {loading ? (
             <div className="flex items-center justify-center py-20 gap-3 text-gray-500">
               <Loader2 size={22} className="animate-spin text-blue-500" />
@@ -905,13 +925,13 @@ const App = () => {
                   <div key={model.id} className={`bg-white rounded-2xl border-l-4 shadow-sm hover:shadow-md transition-all duration-200 ${cardAccent}`}>
 
                     {/* Header row */}
-                    <div className="p-4 pb-3">
+                    <div className="p-4 lg:p-5 pb-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-2.5 flex-1 min-w-0">
                           <span className="text-xl mt-0.5 shrink-0">{getMedalEmoji(index + 1)}</span>
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 mb-1">
-                              <h3 className="font-bold text-gray-900 text-base leading-tight">{model.name}</h3>
+                              <h3 className="font-bold text-gray-900 text-base lg:text-lg leading-tight">{model.name}</h3>
                               <span className="text-xs text-gray-400">by {model.creator}</span>
                               {getModelAge(model.release_date) && (
                                 <span className="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
@@ -946,7 +966,7 @@ const App = () => {
 
                     {/* Metrics grid */}
                     <div className="grid grid-cols-3 gap-px bg-gray-100 border-t border-b border-gray-100">
-                      <div className="bg-white px-3 py-2.5">
+                      <div className="bg-white px-3 lg:px-5 py-2.5 lg:py-3.5">
                         <p className="text-[11px] font-semibold text-emerald-600 mb-1.5">{qualityLabel}</p>
                         <div className="w-full bg-gray-100 rounded-full h-1.5 mb-1">
                           <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-1.5 rounded-full" style={{ width: `${model.task_quality}%` }} />
@@ -954,7 +974,7 @@ const App = () => {
                         <span className="text-sm font-bold text-gray-800">{model.task_quality}<span className="text-[11px] text-gray-400">/100</span></span>
                         <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">{getQualityComment(model.task_quality)}</p>
                       </div>
-                      <div className="bg-white px-3 py-2.5">
+                      <div className="bg-white px-3 lg:px-5 py-2.5 lg:py-3.5">
                         <p className="text-[11px] font-semibold text-amber-600 mb-1.5">Speed</p>
                         <div className="w-full bg-gray-100 rounded-full h-1.5 mb-1">
                           <div className="bg-gradient-to-r from-amber-400 to-amber-500 h-1.5 rounded-full" style={{ width: `${model.speed_score}%` }} />
@@ -967,7 +987,7 @@ const App = () => {
                           {getSpeedComment(model.speed_score, model.ttft_answer ?? model.time_to_first_token)}
                         </p>
                       </div>
-                      <div className="bg-white px-3 py-2.5">
+                      <div className="bg-white px-3 lg:px-5 py-2.5 lg:py-3.5">
                         <p className="text-[11px] font-semibold text-blue-600 mb-1.5">Economy</p>
                         <div className="w-full bg-gray-100 rounded-full h-1.5 mb-1">
                           <div className="bg-gradient-to-r from-blue-400 to-blue-500 h-1.5 rounded-full" style={{ width: `${model.budget_score ?? 0}%` }} />
@@ -986,7 +1006,7 @@ const App = () => {
                     </div>
 
                     {/* Tags + compare */}
-                    <div className="px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+                    <div className="px-4 lg:px-5 py-2.5 lg:py-3 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap gap-1">
                         {model.best_for?.map(tag => (
                           <span key={tag} className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{tag}</span>
@@ -1012,6 +1032,7 @@ const App = () => {
               })}
             </div>
           )}
+          </main>
         </div>
 
         {/* ── Floating Compare Bar ── */}
